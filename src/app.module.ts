@@ -1,10 +1,10 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { GroupModule, TaskModule, UserModule } from './app/modules';
-import { DatabaseModule, RequestService } from './app/shared';
-import { ConfigService } from '@nestjs/config';
-import { ConfigData } from './app/shared/db/configData.db';
+import { DatabaseModule } from './app/shared';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -22,6 +22,6 @@ import { ConfigData } from './app/shared/db/configData.db';
   ],
 
   controllers: [],
-  providers: [ConfigService],
+  providers: [],
 })
 export class AppModule {}

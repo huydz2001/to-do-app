@@ -1,17 +1,11 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CreateDataInput } from 'src/app/dtos';
-import { UserFactory } from 'src/app/factories';
+import { CreateDataInput, LoginDataInput } from 'src/app/dtos';
 import { User } from 'src/app/models';
 import { UserService } from 'src/app/services';
-import { ConfigData } from 'src/app/shared/db/configData.db';
 
 @Resolver()
 export class UserResolver {
-  constructor(
-    private readonly userService: UserService,
-    private readonly userFactory: UserFactory,
-    private readonly configData: ConfigData,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @Query((returns) => User, { nullable: true })
   async getUserById(@Args('id', { type: () => Number }) id: string) {
@@ -21,11 +15,13 @@ export class UserResolver {
     };
   }
 
+  @Query((returns) => User, { nullable: true })
+  async login(@Args('req') req: LoginDataInput) {
+    const user = this.userService.login(req);
+  }
+
   @Mutation((returns) => User)
-  async createUser(@Args('createData') request: CreateDataInput) {
-    let user = await this.userFactory.convertCreateRequestInputToModel(request);
-    user = this.configData.createdData(user);
-    console.log('user::', user);
-    return this.userService.crateUser(user);
+  async createUser(@Args('req') request: CreateDataInput) {
+    return this.userService.crateUser(request);
   }
 }
