@@ -22,12 +22,28 @@ type User {
 """
 scalar Timestamp
 
+type CreateUserResponse {
+  id: Float!
+  user_name: String!
+  email: String!
+}
+
+type LoginResponse {
+  accessToken: String!
+}
+
 type Query {
-  getUserById(id: Float!): User
+  getUsers: [User!]
+  login(req: LoginDataInput!): LoginResponse!
+}
+
+input LoginDataInput {
+  email: String!
+  password: String!
 }
 
 type Mutation {
-  createUser(createData: CreateDataInput!): User!
+  register(req: CreateDataInput!): CreateUserResponse!
 }
 
 input CreateDataInput {
