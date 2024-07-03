@@ -38,3 +38,13 @@ networks:
 volumes:
     postgres:
     pgadmin:
+
+
+#Create container, pull image ,...
+# docker-compose up -d
+#Start db
+# npm run docker:db:start 
+#Stop db
+# npm run docker:db:stop
+#Reset volumes
+# npm run db:dev:restart
