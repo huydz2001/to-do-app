@@ -1,13 +1,18 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
-import { GroupModule, TaskModule, UserModule } from './app/modules';
-import { DatabaseModule } from './app/shared';
 import { JwtModule } from '@nestjs/jwt';
+import { ApiKeyMiddleware, AuthencationMiddleware } from './app/common';
+import { AuthModule, GroupModule, TaskModule, UserModule } from './app/modules';
+import { DatabaseModule } from './app/shared';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: 'src/schema.gql',
@@ -15,13 +20,22 @@ import { JwtModule } from '@nestjs/jwt';
         dateScalarMode: 'timestamp',
       },
     }),
+    JwtModule.register({
+      global: true,
+      signOptions: { expiresIn: '24h' },
+    }),
     DatabaseModule,
     TaskModule,
     GroupModule,
     UserModule,
+    AuthModule,
   ],
 
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ApiKeyMiddleware, AuthencationMiddleware).forRoutes('*');
+  }
+}

@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   NestMiddleware,
   UnauthorizedException,
@@ -10,14 +11,16 @@ export class ApiKeyMiddleware implements NestMiddleware {
   constructor(private readonly configService: ConfigService) {}
 
   use(req: any, res: any, next: (error?: any) => void) {
-    if (!req.header['x-api-key']) {
-      throw new UnauthorizedException('Access Denied');
-    }
+    const isAuth =
+      req.body.operationName == 'Login' || req.body.operationName == 'Register';
 
     if (
-      req.headers['x-api-key'] !== this.configService.get<string>('X_API_KEY')
+      (!req.headers['x-api-key'] ||
+        req.headers['x-api-key'] !==
+          this.configService.get<string>('X_API_KEY')) &&
+      !isAuth
     ) {
-      throw new UnauthorizedException('Access Denied');
+      throw new ForbiddenException('Access Denied');
     }
 
     next();

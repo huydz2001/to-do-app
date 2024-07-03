@@ -1,30 +1,13 @@
-import { Injectable, Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { Injectable } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { STATUS } from 'src/app/common/constants';
 import { CreateDataInput } from 'src/app/dtos';
 import { User } from 'src/app/models';
-import { AuthService } from 'src/app/services';
 
-@Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
-    JwtModule.register({
-      global: true,
-    }),
-  ],
-  providers: [ConfigService, AuthService],
-  exports: [ConfigService, AuthService],
-})
 @Injectable()
 export class UserFactory {
-  constructor(private readonly authService: AuthService) {}
-
   async convertCreateRequestInputToModel(user: CreateDataInput): Promise<User> {
-    const hashPass = await this.authService.hashPassword(user.password);
+    const hashPass = await this.hashPassword(user.password);
     return new User(
       user.user_name,
       user.email,
@@ -38,5 +21,10 @@ export class UserFactory {
       null,
       null,
     );
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    const salt = await bcrypt.genSalt();
+    return await bcrypt.hash(password, salt);
   }
 }

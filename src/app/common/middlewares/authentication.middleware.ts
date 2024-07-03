@@ -1,12 +1,42 @@
-import { NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NestMiddleware,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { ADMIN_ID } from '../constants';
 
-export class Authencation implements NestMiddleware {
-  use(req: any, res: any, next: (error?: any) => void) {
-    const token = this.extractTokenFromHeader(req);
-    if (!token) {
-      throw new UnauthorizedException('Invalid Token');
+@Injectable()
+export class AuthencationMiddleware implements NestMiddleware {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async use(req: any, res: any, next: (error?: any) => void) {
+    const isAuth =
+      req.body.operationName == 'Login' || req.body.operationName == 'Register';
+
+    if (!isAuth) {
+      const token = this.extractTokenFromHeader(req);
+      if (!token) {
+        throw new UnauthorizedException('Invalid Token');
+      }
+
+      try {
+        const payload = await this.jwtService.verifyAsync(token, {
+          secret: this.configService.get<string>('JWT_SIGN_SECRET'),
+        });
+        req['user'] = payload.id;
+      } catch {
+        throw new UnauthorizedException('Invalid Token');
+      }
+    } else {
+      req['user'] = ADMIN_ID;
     }
+    next();
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {

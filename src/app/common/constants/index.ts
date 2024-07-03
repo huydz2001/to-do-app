@@ -11,3 +11,5 @@ export enum STATUS_TASK {
   OVER = 3,
   REJECT = 4,
 }
+
+export const ADMIN_ID = 99;
