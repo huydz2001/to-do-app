@@ -5,7 +5,6 @@ import {
   Entity,
   ManyToMany,
   OneToMany,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseModel } from '../shared';
