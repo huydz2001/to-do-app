@@ -32,17 +32,25 @@ export class AuthService {
 
   async crateUser(req: CreateDataInput): Promise<CreateUserResponse> {
     try {
-      const [findUserByEmail, findUserByUsername] = await Promise.all([
-        this.userRepo.findOneBy({ email: req.email }),
-        this.userRepo.findOneBy({ user_name: req.user_name }),
-      ]);
+      const existingUser = await this.userRepo.findOne({
+        where: [{ user_name: req.user_name }],
+      });
 
-      if (findUserByEmail) {
-        throw new BadRequestException('Email da ton tai');
-      }
-
-      if (findUserByUsername) {
-        throw new BadRequestException('Username da ton tai');
+      if (existingUser) {
+        return new CreateUserResponse(
+          HttpStatus.BAD_REQUEST,
+          false,
+          existingUser.email == req.email
+            ? 'Email already exist'
+            : 'Username already exist',
+          [
+            {
+              field: existingUser.email == req.email ? 'email' : 'user_name',
+              message: `${existingUser.email == req.email ? 'email' : 'user_name'} already exist`,
+            },
+          ],
+          null,
+        );
       }
 
       let user = await this.userFactory.convertCreateRequestInputToModel(req);
@@ -50,7 +58,17 @@ export class AuthService {
       await this.userRepo.save(user);
 
       const { id, email, user_name, ...userInfor } = user;
-      return new CreateUserResponse(id, email, user_name);
+      return new CreateUserResponse(
+        HttpStatus.OK,
+        true,
+        'Register user success',
+        [],
+        {
+          id: id,
+          email: email,
+          username: user_name,
+        },
+      );
     } catch (err) {
       throw err;
     }
@@ -58,25 +76,58 @@ export class AuthService {
 
   async login(req: LoginDataInput): Promise<LoginResponse> {
     try {
-      const user = await this.userRepo.findOneBy({
-        email: req.email,
-      });
+      const user = await this.userRepo.findOneBy(
+        req.emailOrUsername.includes('@')
+          ? { email: req.emailOrUsername }
+          : { user_name: req.emailOrUsername },
+      );
 
       if (!user) {
-        throw new BadRequestException('Email khong ton tai');
-      } else if (
-        (await this.comparePasswords(req.password, user!.password)) == false
-      ) {
-        throw new BadRequestException('Sai mat khau');
+        return new LoginResponse(
+          HttpStatus.OK,
+          true,
+          'User not found',
+          [
+            {
+              field: 'emailOrUsername',
+              message: 'Email or Username incorrect',
+            },
+          ],
+          null,
+        );
+      }
+
+      const isMatchPass = await this.comparePasswords(
+        req.password,
+        user!.password,
+      );
+
+      if (isMatchPass == false) {
+        return new LoginResponse(
+          HttpStatus.OK,
+          true,
+          'Wrong password',
+          [
+            {
+              field: 'password',
+              message: 'Password incorrect',
+            },
+          ],
+          null,
+        );
       }
 
       const payload = { id: user.id, email: user.email };
       const accessToken = await this.generateAccessToken(payload);
 
-      return new LoginResponse(accessToken);
-    } catch (error) {
-      throw error;
-    }
+      return new LoginResponse(
+        HttpStatus.OK,
+        true,
+        'Login success',
+        null,
+        accessToken,
+      );
+    } catch (error) {}
   }
 
   private async generateAccessToken(payload: any): Promise<string> {
