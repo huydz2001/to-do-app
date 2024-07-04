@@ -1,4 +1,9 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -58,11 +63,11 @@ export class AuthService {
       });
 
       if (!user) {
-        throw new HttpException('Email khong ton tai', 400);
+        throw new BadRequestException('Email khong ton tai');
       } else if (
         (await this.comparePasswords(req.password, user!.password)) == false
       ) {
-        throw new HttpException('Sai mat khau', 400);
+        throw new BadRequestException('Sai mat khau');
       }
 
       const payload = { id: user.id, email: user.email };
