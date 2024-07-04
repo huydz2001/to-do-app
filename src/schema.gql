@@ -22,14 +22,31 @@ type User {
 """
 scalar Timestamp
 
-type CreateUserResponse {
+type GraphQLError {
+  field: String!
+  message: String!
+}
+
+type UserResponse {
   id: Float!
-  user_name: String!
+  username: String!
   email: String!
 }
 
+type CreateUserResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  user: UserResponse
+}
+
 type LoginResponse {
-  accessToken: String!
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  accessToken: String
 }
 
 type Query {
@@ -38,7 +55,7 @@ type Query {
 }
 
 input LoginDataInput {
-  email: String!
+  emailOrUsername: String!
   password: String!
 }
 
