@@ -22,7 +22,7 @@ export class Task extends BaseModel {
   task_name: string;
 
   @ManyToOne(() => User, (user) => user.tasks)
-  @JoinColumn()
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column()
@@ -44,4 +44,9 @@ export class Task extends BaseModel {
   @Column({ length: 100 })
   @Field({ nullable: false })
   desc: string;
+
+  constructor(item: Partial<Task>) {
+    super();
+    Object.assign(this, item);
+  }
 }

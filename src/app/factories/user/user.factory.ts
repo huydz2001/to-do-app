@@ -8,19 +8,23 @@ import { User } from 'src/app/models';
 export class UserFactory {
   async convertCreateRequestInputToModel(user: CreateDataInput): Promise<User> {
     const hashPass = await this.hashPassword(user.password);
-    return new User(
-      user.user_name,
-      user.email,
-      hashPass,
-      'https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1',
-      null,
-      STATUS.NOT_JOIN,
-      null,
-      null,
-      null,
-      null,
-      null,
-    );
+    return {
+      id: null,
+      user_name: user.user_name,
+      email: user.email,
+      password: hashPass,
+      avatar:
+        'https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1',
+      dob: null,
+      status: STATUS.NOT_JOIN,
+      group: null,
+      tasks: [],
+      isDelete: null,
+      created_at: null,
+      created_by: null,
+      updated_at: null,
+      updated_by: null,
+    };
   }
 
   private async hashPassword(password: string): Promise<string> {

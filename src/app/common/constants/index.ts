@@ -13,3 +13,8 @@ export enum STATUS_TASK {
 }
 
 export const ADMIN_ID = 99;
+
+export enum ROLE_GROUP {
+  Admin = 99,
+  Member = 0,
+}

@@ -3,9 +3,10 @@ import { STATUS } from 'src/app/common/constants';
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToMany,
+  ManyToOne,
   OneToMany,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseModel } from '../shared';
@@ -47,38 +48,17 @@ export class User extends BaseModel {
   @Field({ nullable: true, defaultValue: STATUS.NOT_JOIN })
   status: number;
 
-  @ManyToMany(() => Group, (group) => group.members)
-  groups: Group[];
+  @ManyToOne(() => Group, (group) => group.members)
+  @JoinColumn({
+    name: 'group_id',
+  })
+  group: Group;
 
-  @OneToMany(() => Task, (task) => task.user)
+  @OneToMany(() => Task, (task) => task.user, { cascade: true })
   tasks: Task[];
 
-  constructor(
-    user_name: string,
-    email: string,
-    password: string,
-    avatar?: string,
-    dob?: string,
-    status: number = STATUS.NOT_JOIN,
-    isDelete?: boolean,
-    created_at?: Date,
-    created_by?: number,
-    updated_at?: Date,
-    updated_by?: number,
-  ) {
+  constructor(item: Partial<User>) {
     super();
-    this.user_name = user_name;
-    this.email = email;
-    this.password = password;
-    this.avatar =
-      avatar ||
-      'https://i0.wp.com/sbcf.fr/wp-content/uploads/2018/03/sbcf-default-avatar.png?ssl=1';
-    this.dob = dob;
-    this.status = status;
-    this.isDelete = isDelete;
-    this.created_at = created_at;
-    this.created_by = created_by;
-    this.updated_at = updated_at;
-    this.updated_by = updated_by;
+    Object.assign(this, item);
   }
 }

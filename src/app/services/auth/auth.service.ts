@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -74,7 +69,7 @@ export class AuthService {
     }
   }
 
-  async login(req: LoginDataInput): Promise<LoginResponse> {
+  async login(req: LoginDataInput, res: Response): Promise<LoginResponse> {
     try {
       const user = await this.userRepo.findOneBy(
         req.emailOrUsername.includes('@')

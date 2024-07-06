@@ -15,12 +15,25 @@ type User {
   avatar: String
   dob: String
   status: Float
+  group: [Group!]
 }
 
 """
 `Date` type as integer. Type represents date and time as number of milliseconds from start of UNIX epoch.
 """
 scalar Timestamp
+
+type Group {
+  isDelete: Boolean!
+  created_at: Timestamp!
+  created_by: Int!
+  updated_at: Timestamp!
+  updated_by: Int!
+  id: Int!
+  group_name: String!
+  avatar: String
+  members: [User!]!
+}
 
 type GraphQLError {
   field: String!
@@ -49,7 +62,48 @@ type LoginResponse {
   accessToken: String
 }
 
+type GroupResponse {
+  id: Float!
+  group_name: String!
+}
+
+type CreateGroupResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  group: GroupResponse!
+}
+
+type AddRemoveUser {
+  id: Float!
+  user_name: String!
+}
+
+type AddAndRemoveUserResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  groupId: Float
+  user: AddRemoveUser
+}
+
+type GroupDelete {
+  id: Int
+  group_name: String
+}
+
+type DeleteGroupResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  group: GroupDelete
+}
+
 type Query {
+  getAllGroups: [Group!]
   getUsers: [User!]
   login(req: LoginDataInput!): LoginResponse!
 }
@@ -60,7 +114,22 @@ input LoginDataInput {
 }
 
 type Mutation {
+  createGroup(req: CreateGroupRequest!): CreateGroupResponse!
+  deleteUserGroup(req: AddAndRemoveUserInput!): AddAndRemoveUserResponse!
+  addUserGroup(req: AddAndRemoveUserInput!): AddAndRemoveUserResponse!
+  deleteGroup(req: Int!): DeleteGroupResponse!
   register(req: CreateDataInput!): CreateUserResponse!
+}
+
+input CreateGroupRequest {
+  group_name: String!
+  avatar: String
+  members: [Int!]!
+}
+
+input AddAndRemoveUserInput {
+  groupId: Int!
+  userId: Int!
 }
 
 input CreateDataInput {
