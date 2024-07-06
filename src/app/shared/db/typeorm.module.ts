@@ -20,7 +20,7 @@ import { Group, Task, User } from 'src/app/models';
           password: configService.get<string>('POSTGRES_PASSWORD'),
           database: configService.get<string>('POSTGRES_DB_NAME'),
           synchronize: true,
-          logging: false,
+          logging: true,
           entities: [User, Group, Task],
         };
       },

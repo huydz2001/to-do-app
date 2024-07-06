@@ -3,9 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserFactory } from 'src/app/factories';
-import { User } from 'src/app/models';
+import { User, Group } from 'src/app/models';
 import { ConfigData } from 'src/app/shared';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class UserService {
@@ -18,6 +18,18 @@ export class UserService {
   ) {}
 
   getUsers() {
-    return this.userRepo.find();
+    return this.userRepo.find({
+      relations: {
+        group: true,
+      },
+    });
+  }
+
+  findById(id: number) {
+    return this.userRepo.findOneBy({ id: id });
+  }
+
+  findByIds(ids: number[]) {
+    return this.userRepo.findBy({ id: In(ids) });
   }
 }

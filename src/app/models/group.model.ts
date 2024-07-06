@@ -1,11 +1,5 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseModel } from '../shared';
 import { User } from './user.model';
 
@@ -16,17 +10,21 @@ export class Group extends BaseModel {
   @Field((type) => Int)
   id: number;
 
-  @Column()
-  @Field({ nullable: false })
+  @Column({ unique: true, nullable: false })
+  @Field()
   group_name: string;
 
-  @ManyToMany(() => User, (user) => user.groups, {
+  @Column({ nullable: true })
+  @Field({ nullable: true })
+  avatar?: string;
+
+  @OneToMany(() => User, (user) => user.group, {
     cascade: true,
   })
-  @JoinTable()
   members: User[];
 
-  @Column()
-  @Field({ nullable: true, defaultValue: null })
-  avatar?: string;
+  constructor(item: Partial<Group>) {
+    super();
+    Object.assign(this, item);
+  }
 }

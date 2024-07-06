@@ -1,16 +1,32 @@
-import { Args, Context, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Context,
+  Int,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { CreateDataInput, LoginDataInput } from 'src/app/dtos';
 import { LoginResponse } from 'src/app/dtos/user/loginResponse.dto';
-import { User } from 'src/app/models';
-import { UserService } from 'src/app/services';
+import { Group, User } from 'src/app/models';
+import { GroupService, UserService } from 'src/app/services';
 
-@Resolver()
+@Resolver((of) => User)
 export class UserResolver {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly groupService: GroupService,
+  ) {}
 
   @Query((returns) => [User], { nullable: true })
-  async getUsers(@Context() ctx: any) {
-    console.log(ctx.req.user);
-    return this.userService.getUsers();
+  async getUsers(): Promise<User[]> {
+    return await this.userService.getUsers();
+  }
+
+  @ResolveField('group', (type) => [Group], { nullable: true })
+  async getGroups(@Parent() user: User) {
+    return this.groupService.getAll();
   }
 }

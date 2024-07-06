@@ -6,6 +6,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { ApiKeyMiddleware, AuthencationMiddleware } from './app/common';
 import { AuthModule, GroupModule, TaskModule, UserModule } from './app/modules';
 import { DatabaseModule } from './app/shared';
+import { GroupService, UserService } from './app/services';
+import { RequestService } from './app/shared/service/request.service';
 
 @Module({
   imports: [
@@ -32,7 +34,7 @@ import { DatabaseModule } from './app/shared';
   ],
 
   controllers: [],
-  providers: [],
+  providers: [RequestService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

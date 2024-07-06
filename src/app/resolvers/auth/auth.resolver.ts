@@ -1,4 +1,4 @@
-import { HttpException } from '@nestjs/common';
+import { Res } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import {
   CreateDataInput,
@@ -13,8 +13,11 @@ export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
   @Query((returns) => LoginResponse)
-  async login(@Args('req') req: LoginDataInput) {
-    return await this.authService.login(req);
+  async login(
+    @Args('req') req: LoginDataInput,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return await this.authService.login(req, res);
   }
 
   @Mutation((returns) => CreateUserResponse)
