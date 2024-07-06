@@ -21,10 +21,6 @@ export class Task extends BaseModel {
   @Field({ nullable: false })
   task_name: string;
 
-  @Column()
-  @Field({ nullable: true, name: 'user_id' })
-  userId: string;
-
   @ManyToOne(() => User, (user) => user.tasks)
   @JoinColumn({ name: 'user_id' })
   user: User;
