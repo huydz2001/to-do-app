@@ -2,6 +2,27 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Task {
+  isDelete: Boolean!
+  created_at: Timestamp!
+  created_by: Int!
+  updated_at: Timestamp!
+  updated_by: Int!
+  id: Int!
+  task_name: String!
+  start_date: Timestamp!
+  start_time: String!
+  end_time: String!
+  status: Float!
+  desc: String
+  user: User
+}
+
+"""
+`Date` type as integer. Type represents date and time as number of milliseconds from start of UNIX epoch.
+"""
+scalar Timestamp
+
 type User {
   isDelete: Boolean!
   created_at: Timestamp!
@@ -17,11 +38,6 @@ type User {
   status: Float
   group: [Group!]
 }
-
-"""
-`Date` type as integer. Type represents date and time as number of milliseconds from start of UNIX epoch.
-"""
-scalar Timestamp
 
 type Group {
   isDelete: Boolean!
@@ -60,6 +76,15 @@ type LoginResponse {
   message: String!
   errors: [GraphQLError!]
   accessToken: String
+  refreshToken: String
+}
+
+type LogoutResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  id: Int!
 }
 
 type GroupResponse {
@@ -89,6 +114,28 @@ type AddAndRemoveUserResponse {
   user: AddRemoveUser
 }
 
+type TaskResponse {
+  id: Int!
+  task_name: String!
+}
+
+type AddAndRemoveTaskResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  task: TaskResponse!
+}
+
+type RefreshTokenResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  accessToken: String
+  refreshToken: String
+}
+
 type GroupDelete {
   id: Int
   group_name: String
@@ -103,6 +150,7 @@ type DeleteGroupResponse {
 }
 
 type Query {
+  getAll: Task
   getAllGroups: [Group!]
   getUsers: [User!]
   login(req: LoginDataInput!): LoginResponse!
@@ -114,11 +162,23 @@ input LoginDataInput {
 }
 
 type Mutation {
+  create(req: CreateTaskInput!): AddAndRemoveTaskResponse!
   createGroup(req: CreateGroupRequest!): CreateGroupResponse!
   deleteUserGroup(req: AddAndRemoveUserInput!): AddAndRemoveUserResponse!
   addUserGroup(req: AddAndRemoveUserInput!): AddAndRemoveUserResponse!
   deleteGroup(req: Int!): DeleteGroupResponse!
   register(req: CreateDataInput!): CreateUserResponse!
+  refreshToken(token: String!): RefreshTokenResponse!
+  logOut(userId: Int!): LogoutResponse!
+}
+
+input CreateTaskInput {
+  task_name: String!
+  start_date: Timestamp!
+  start_time: String!
+  end_time: String!
+  desc: String!
+  user: [Int!]!
 }
 
 input CreateGroupRequest {

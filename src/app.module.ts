@@ -5,9 +5,12 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { JwtModule } from '@nestjs/jwt';
 import { ApiKeyMiddleware, AuthencationMiddleware } from './app/common';
 import { AuthModule, GroupModule, TaskModule, UserModule } from './app/modules';
-import { DatabaseModule } from './app/shared';
-import { GroupService, UserService } from './app/services';
+import { ConfigData, DatabaseModule, RequestModule } from './app/shared';
 import { RequestService } from './app/shared/service/request.service';
+import { UserFactory } from './app/factories';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Token, User } from './app/models';
+import { AuthService } from './app/services';
 
 @Module({
   imports: [
@@ -24,17 +27,19 @@ import { RequestService } from './app/shared/service/request.service';
     }),
     JwtModule.register({
       global: true,
-      signOptions: { expiresIn: '24h' },
+      signOptions: { expiresIn: '1h' },
     }),
+    TypeOrmModule.forFeature([Token, User]),
     DatabaseModule,
     TaskModule,
     GroupModule,
     UserModule,
     AuthModule,
+    RequestModule,
   ],
-
   controllers: [],
-  providers: [RequestService],
+  providers: [RequestService, AuthService, UserFactory, ConfigData],
+  exports: [RequestService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

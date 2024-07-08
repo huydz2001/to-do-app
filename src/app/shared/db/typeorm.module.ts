@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Group, Task, User } from 'src/app/models';
+import { Group, Task, Token, User } from 'src/app/models';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { Group, Task, User } from 'src/app/models';
           database: configService.get<string>('POSTGRES_DB_NAME'),
           synchronize: true,
           logging: true,
-          entities: [User, Group, Task],
+          entities: [User, Group, Task, Token],
         };
       },
     }),

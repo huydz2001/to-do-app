@@ -1,15 +1,15 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { BaseResponse, GraphQLError } from '../base/base.response';
+import { BaseResponse } from '../base/base.response';
 
 @ObjectType()
-export class LoginResponse extends BaseResponse {
+export class RefreshTokenResponse extends BaseResponse {
   @Field({ nullable: true })
   accessToken: string;
 
   @Field({ nullable: true })
   refreshToken: string;
 
-  constructor(item: Partial<LoginResponse>) {
+  constructor(item: Partial<RefreshTokenResponse>) {
     super();
     Object.assign(this, item);
   }

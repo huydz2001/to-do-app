@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserFactory } from 'src/app/factories';
 import { User, Group } from 'src/app/models';
-import { ConfigData } from 'src/app/shared';
+import { ConfigData, RequestService } from 'src/app/shared';
 import { In, Repository } from 'typeorm';
 
 @Injectable()
@@ -15,12 +15,16 @@ export class UserService {
     private readonly configData: ConfigData,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly requestService: RequestService,
   ) {}
 
   getUsers() {
+    console.log(this.requestService.getUserId());
+
     return this.userRepo.find({
       relations: {
         group: true,
+        tasks: true,
       },
     });
   }

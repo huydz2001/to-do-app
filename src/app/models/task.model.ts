@@ -22,7 +22,7 @@ export class Task extends BaseModel {
   task_name: string;
 
   @ManyToOne(() => User, (user) => user.tasks)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'fk_task_user' })
   user: User;
 
   @Column()
@@ -41,9 +41,9 @@ export class Task extends BaseModel {
   @Field({ nullable: false, defaultValue: STATUS_TASK.NOT_STARTED })
   status: number;
 
-  @Column({ length: 100 })
-  @Field({ nullable: false })
-  desc: string;
+  @Column({ length: 100, nullable: true })
+  @Field({ nullable: true })
+  desc?: string;
 
   constructor(item: Partial<Task>) {
     super();
