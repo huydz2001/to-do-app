@@ -19,18 +19,8 @@ export class CreateUserResponse extends BaseResponse {
   @Field(() => UserResponse, { nullable: true })
   user?: UserResponse;
 
-  constructor(
-    code: number,
-    success: boolean,
-    message: string,
-    errors: GraphQLError[],
-    user?: UserResponse,
-  ) {
+  constructor(item: Partial<CreateUserResponse>) {
     super();
-    this.code = code;
-    this.success = success;
-    this.message = message;
-    this.errors = errors;
-    this.user = user;
+    Object.assign(this, item);
   }
 }

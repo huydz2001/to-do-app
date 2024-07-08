@@ -84,7 +84,7 @@ export class GroupService {
         code: HttpStatus.OK,
         success: true,
         message: 'Create group success',
-        errors: null,
+        errors: [],
         group: {
           id: id,
           group_name: group_name,
@@ -207,7 +207,7 @@ export class GroupService {
         code: HttpStatus.OK,
         success: true,
         message: 'Add member to group success',
-        errors: null,
+        errors: [],
         groupId: groupId,
         user: {
           id: userId,
@@ -302,7 +302,7 @@ export class GroupService {
         code: HttpStatus.OK,
         success: true,
         message: 'User not found',
-        errors: null,
+        errors: [],
         groupId: groupId,
         user: {
           id: userId,
@@ -353,7 +353,7 @@ export class GroupService {
         code: HttpStatus.OK,
         success: true,
         message: 'Delete Group Success',
-        errors: null,
+        errors: [],
         group: {
           id: id,
           group_name: existGroup.group_name,

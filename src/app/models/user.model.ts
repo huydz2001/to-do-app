@@ -51,6 +51,7 @@ export class User extends BaseModel {
   @ManyToOne(() => Group, (group) => group.members)
   @JoinColumn({
     name: 'group_id',
+    foreignKeyConstraintName: 'fk_user_group',
   })
   group: Group;
 

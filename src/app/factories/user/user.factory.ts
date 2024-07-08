@@ -28,7 +28,6 @@ export class UserFactory {
   }
 
   private async hashPassword(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt();
-    return await bcrypt.hash(password, salt);
+    return await bcrypt.hash(password, 10);
   }
 }

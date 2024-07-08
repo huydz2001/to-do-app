@@ -5,7 +5,7 @@ import { Column, Entity } from 'typeorm';
 @ObjectType()
 export class BaseModel {
   @Column()
-  @Field({ defaultValue: 0, nullable: false })
+  @Field({ defaultValue: false, nullable: false })
   isDelete: boolean;
 
   @Column()
