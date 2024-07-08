@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserFactory } from 'src/app/factories';
-import { Group, Task, Token, User } from 'src/app/models';
+import { Group, Task, Token, User } from 'src/app/entities';
 import { AuthResolver } from 'src/app/resolvers';
 import { AuthService } from 'src/app/services';
 import { ConfigData, RequestModule, RequestService } from 'src/app/shared';

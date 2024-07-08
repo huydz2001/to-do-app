@@ -1,5 +1,5 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import { User } from 'src/app/models';
+import { User } from 'src/app/entities';
 
 @InputType()
 export class UserGroup {

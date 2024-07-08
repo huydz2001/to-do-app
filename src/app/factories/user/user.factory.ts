@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { STATUS } from 'src/app/common/constants';
 import { CreateDataInput } from 'src/app/dtos';
-import { User } from 'src/app/models';
+import { User } from 'src/app/entities';
 
 @Injectable()
 export class UserFactory {

@@ -13,7 +13,7 @@ import {
   RefreshTokenResponse,
 } from 'src/app/dtos';
 import { UserFactory } from 'src/app/factories';
-import { Token, User } from 'src/app/models';
+import { Token, User } from 'src/app/entities';
 import { ConfigData, RequestService } from 'src/app/shared';
 import { Repository } from 'typeorm';
 

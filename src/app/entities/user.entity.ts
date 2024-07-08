@@ -10,8 +10,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseModel } from '../shared';
-import { Group } from './group.model';
-import { Task } from './task.model';
+import { Group } from './group.entity';
+import { Task } from './task.entity';
 
 @Entity({ name: 'users' })
 @ObjectType()

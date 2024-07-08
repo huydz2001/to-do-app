@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GroupFactory, UserFactory } from 'src/app/factories';
-import { Group, User } from 'src/app/models';
+import { Group, User } from 'src/app/entities';
 import { GroupResolver } from 'src/app/resolvers';
 import { GroupService, UserService } from 'src/app/services';
-import { ConfigData } from 'src/app/shared';
+import { ConfigData, RequestModule } from 'src/app/shared';
 import { RequestService } from 'src/app/shared/service/request.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Group, User])],
+  imports: [TypeOrmModule.forFeature([Group, User]), RequestModule],
   providers: [
     GroupResolver,
     GroupService,
@@ -16,6 +16,7 @@ import { RequestService } from 'src/app/shared/service/request.service';
     ConfigData,
     UserService,
     UserFactory,
+    RequestService,
   ],
 })
 export class GroupModule {}
