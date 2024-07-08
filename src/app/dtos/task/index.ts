@@ -1,2 +1,2 @@
-export * from './addAndRemoveTaskResponse.dto';
-export * from './createTaskInput.dto';
+export * from './taskResponse.dto';
+export * from './upsertTaskInput.dto';

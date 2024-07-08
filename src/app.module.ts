@@ -9,7 +9,7 @@ import { ConfigData, DatabaseModule, RequestModule } from './app/shared';
 import { RequestService } from './app/shared/service/request.service';
 import { UserFactory } from './app/factories';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Token, User } from './app/models';
+import { Token, User } from './app/entities';
 import { AuthService } from './app/services';
 
 @Module({

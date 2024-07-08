@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserFactory } from 'src/app/factories';
-import { User, Group } from 'src/app/models';
+import { User, Group } from 'src/app/entities';
 import { ConfigData, RequestService } from 'src/app/shared';
 import { In, Repository } from 'typeorm';
 

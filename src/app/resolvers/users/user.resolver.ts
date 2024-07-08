@@ -10,7 +10,7 @@ import {
 } from '@nestjs/graphql';
 import { CreateDataInput, LoginDataInput } from 'src/app/dtos';
 import { LoginResponse } from 'src/app/dtos/user/loginResponse.dto';
-import { Group, User } from 'src/app/models';
+import { Group, User } from 'src/app/entities';
 import { GroupService, UserService } from 'src/app/services';
 
 @Resolver((of) => User)
@@ -20,8 +20,8 @@ export class UserResolver {
     private readonly groupService: GroupService,
   ) {}
 
-  @Query((returns) => [User], { nullable: true })
-  async getUsers(): Promise<User[]> {
+  @Query((returns) => [User], { nullable: true, name: 'getAllUsers' })
+  async getAll(): Promise<User[]> {
     return await this.userService.getUsers();
   }
 

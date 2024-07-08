@@ -18,3 +18,9 @@ export enum ROLE_GROUP {
   Admin = 99,
   Member = 0,
 }
+
+export enum TYPE_REQUEST {
+  update = 'update',
+  create = 'create',
+  delete = 'delete',
+}

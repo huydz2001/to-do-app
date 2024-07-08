@@ -1,7 +1,7 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseModel } from '../shared';
-import { User } from './user.model';
+import { User } from './user.entity';
 
 @Entity({ name: 'groups' })
 @ObjectType()

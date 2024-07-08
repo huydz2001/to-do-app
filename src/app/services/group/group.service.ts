@@ -6,7 +6,7 @@ import {
   CreateGroupResponse,
 } from 'src/app/dtos';
 import { GroupFactory } from 'src/app/factories';
-import { Group, User } from 'src/app/models';
+import { Group, User } from 'src/app/entities';
 import { ConfigData } from 'src/app/shared';
 import { In, Repository } from 'typeorm';
 import { UserService } from '../user/user.service';

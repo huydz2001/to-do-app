@@ -17,7 +17,7 @@ import {
 } from 'src/app/dtos';
 import { AddAndRemoveUserInput } from 'src/app/dtos/group/addAndRemoveInput.dto';
 import { DeleteGroupResponse } from 'src/app/dtos/group/deleteResponse.dto';
-import { Group, User } from 'src/app/models';
+import { Group, User } from 'src/app/entities';
 import { GroupService, UserService } from 'src/app/services';
 
 @Resolver((of) => Group)
@@ -27,7 +27,7 @@ export class GroupResolver {
     private readonly userService: UserService,
   ) {}
 
-  @Query((returns) => [Group], { nullable: true })
+  @Query((returns) => [Group], { nullable: true, name: 'getAllGroups' })
   async getAllGroups(): Promise<Group[]> {
     return await this.groupService.getAll();
   }

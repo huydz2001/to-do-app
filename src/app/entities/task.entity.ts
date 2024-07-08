@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseModel } from '../shared';
-import { User } from './user.model';
+import { User } from './user.entity';
 
 @Entity({ name: 'tasks' })
 @ObjectType()
@@ -25,7 +25,9 @@ export class Task extends BaseModel {
   @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'fk_task_user' })
   user: User;
 
-  @Column()
+  @Column({
+    type: 'date',
+  })
   @Field({ nullable: false })
   start_date: Date;
 

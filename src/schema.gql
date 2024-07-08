@@ -119,12 +119,12 @@ type TaskResponse {
   task_name: String!
 }
 
-type AddAndRemoveTaskResponse {
+type ActionTaskResponse {
   code: Float!
   success: Boolean!
   message: String!
   errors: [GraphQLError!]
-  task: TaskResponse!
+  task: TaskResponse
 }
 
 type RefreshTokenResponse {
@@ -150,9 +150,10 @@ type DeleteGroupResponse {
 }
 
 type Query {
-  getAll: Task
+  getAllTasks: [Task!]
+  getAllTaskByUserId(userId: Int!): [Task!]
   getAllGroups: [Group!]
-  getUsers: [User!]
+  getAllUsers: [User!]
   login(req: LoginDataInput!): LoginResponse!
 }
 
@@ -162,7 +163,8 @@ input LoginDataInput {
 }
 
 type Mutation {
-  create(req: CreateTaskInput!): AddAndRemoveTaskResponse!
+  createTask(req: UpsertTaskInput!): ActionTaskResponse!
+  updateTask(req: UpsertTaskInput!): ActionTaskResponse!
   createGroup(req: CreateGroupRequest!): CreateGroupResponse!
   deleteUserGroup(req: AddAndRemoveUserInput!): AddAndRemoveUserResponse!
   addUserGroup(req: AddAndRemoveUserInput!): AddAndRemoveUserResponse!
@@ -172,13 +174,15 @@ type Mutation {
   logOut(userId: Int!): LogoutResponse!
 }
 
-input CreateTaskInput {
+input UpsertTaskInput {
+  id: Int
   task_name: String!
   start_date: Timestamp!
   start_time: String!
   end_time: String!
-  desc: String!
-  user: [Int!]!
+  desc: String
+  status: Int
+  userId: Int!
 }
 
 input CreateGroupRequest {
