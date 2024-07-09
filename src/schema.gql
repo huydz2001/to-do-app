@@ -10,7 +10,7 @@ type Task {
   updated_by: Int!
   id: Int!
   task_name: String!
-  start_date: Timestamp!
+  start_date: String!
   start_time: String!
   end_time: String!
   status: Float!
@@ -32,11 +32,12 @@ type User {
   id: Int!
   user_name: String!
   email: String!
-  password: String!
+  password: String
   avatar: String
   dob: String
   status: Float
-  group: [Group!]
+  group: Group
+  tasks: [Task!]
 }
 
 type Group {
@@ -87,17 +88,33 @@ type LogoutResponse {
   id: Int!
 }
 
+type ChangePassResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  id: Int!
+}
+
+type UpdateProfileResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  id: Int!
+}
+
 type GroupResponse {
   id: Float!
   group_name: String!
 }
 
-type CreateGroupResponse {
+type UpsertGroupResponse {
   code: Float!
   success: Boolean!
   message: String!
   errors: [GraphQLError!]
-  group: GroupResponse!
+  group: GroupResponse
 }
 
 type AddRemoveUser {
@@ -112,6 +129,19 @@ type AddAndRemoveUserResponse {
   errors: [GraphQLError!]
   groupId: Float
   user: AddRemoveUser
+}
+
+type GroupDelete {
+  id: Int
+  group_name: String
+}
+
+type DeleteGroupResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  group: GroupDelete
 }
 
 type TaskResponse {
@@ -136,19 +166,6 @@ type RefreshTokenResponse {
   refreshToken: String
 }
 
-type GroupDelete {
-  id: Int
-  group_name: String
-}
-
-type DeleteGroupResponse {
-  code: Float!
-  success: Boolean!
-  message: String!
-  errors: [GraphQLError!]
-  group: GroupDelete
-}
-
 type Query {
   getAllTasks: [Task!]
   getAllTaskByUserId(userId: Int!): [Task!]
@@ -165,10 +182,14 @@ input LoginDataInput {
 type Mutation {
   createTask(req: UpsertTaskInput!): ActionTaskResponse!
   updateTask(req: UpsertTaskInput!): ActionTaskResponse!
-  createGroup(req: CreateGroupRequest!): CreateGroupResponse!
+  deleteTask(id: Int!): ActionTaskResponse!
+  createGroup(req: UpsertGroupRequest!): UpsertGroupResponse!
+  updateGroup(req: UpsertGroupRequest!): UpsertGroupResponse!
   deleteUserGroup(req: AddAndRemoveUserInput!): AddAndRemoveUserResponse!
   addUserGroup(req: AddAndRemoveUserInput!): AddAndRemoveUserResponse!
   deleteGroup(req: Int!): DeleteGroupResponse!
+  changePassword(req: ChangePassInput!, id: Int!): ChangePassResponse!
+  updateProfile(req: UpdateProfileInput!, id: Int!): UpdateProfileResponse!
   register(req: CreateDataInput!): CreateUserResponse!
   refreshToken(token: String!): RefreshTokenResponse!
   logOut(userId: Int!): LogoutResponse!
@@ -177,7 +198,7 @@ type Mutation {
 input UpsertTaskInput {
   id: Int
   task_name: String!
-  start_date: Timestamp!
+  start_date: String!
   start_time: String!
   end_time: String!
   desc: String
@@ -185,7 +206,8 @@ input UpsertTaskInput {
   userId: Int!
 }
 
-input CreateGroupRequest {
+input UpsertGroupRequest {
+  id: Int
   group_name: String!
   avatar: String
   members: [Int!]!
@@ -194,6 +216,17 @@ input CreateGroupRequest {
 input AddAndRemoveUserInput {
   groupId: Int!
   userId: Int!
+}
+
+input ChangePassInput {
+  oldPass: String!
+  newPass: String!
+}
+
+input UpdateProfileInput {
+  user_name: String!
+  avatar: String
+  dob: String
 }
 
 input CreateDataInput {

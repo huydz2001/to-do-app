@@ -17,5 +17,6 @@ import { ConfigData, RequestModule, RequestService } from 'src/app/shared';
     ConfigData,
     TaskFactory,
   ],
+  exports: [TaskService, TaskFactory],
 })
 export class TaskModule {}

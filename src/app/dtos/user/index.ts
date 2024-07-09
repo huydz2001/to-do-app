@@ -3,3 +3,7 @@ export * from './createUserResponse.dto';
 export * from './loginDataInput.dto';
 export * from './loginResponse.dto';
 export * from './logoutResponse.dto';
+export * from './changePassInput.dto';
+export * from './changePassResponse.dto';
+export * from './updateProfileInput.dto';
+export * from './updateProfileResponse.dto';

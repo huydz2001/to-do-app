@@ -8,7 +8,10 @@ export class UserGroup {
 }
 
 @InputType()
-export class CreateGroupRequest {
+export class UpsertGroupRequest {
+  @Field((type) => Int, { nullable: true })
+  id: number;
+
   @Field()
   group_name: string;
 

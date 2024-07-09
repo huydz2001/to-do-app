@@ -5,7 +5,7 @@ import { ActionTaskResponse, UpsertTaskInput } from 'src/app/dtos';
 import { Task, User } from 'src/app/entities';
 import { TaskFactory } from 'src/app/factories';
 import { ConfigData } from 'src/app/shared';
-import { Raw, Repository } from 'typeorm';
+import { In, Raw, Repository } from 'typeorm';
 
 @Injectable()
 export class TaskService {
@@ -24,6 +24,10 @@ export class TaskService {
         user: true,
       },
     });
+  }
+
+  findByIds(ids: number[]) {
+    return this.taskRepo.findBy({ id: In(ids) });
   }
 
   async upsert(
@@ -133,19 +137,68 @@ export class TaskService {
     });
   }
 
-  async getTasksByUserAndDate(userId: number, date: Date): Promise<Task[]> {
+  async getTasksByUserAndDate(userId: number, date: string): Promise<Task[]> {
     return await this.taskRepo.find({
       where: {
         user: {
           id: userId,
         },
-        start_date: Raw(
-          (alias) =>
-            `${alias.toString()} = '${date.toISOString().split('T')[0]}'`,
-        ),
+        start_date: Raw((alias) => `${alias.toString()} = '${date}'`),
       },
       relations: { user: true },
     });
+  }
+
+  async delete(id: number): Promise<ActionTaskResponse> {
+    try {
+      const existTask = await this.taskRepo.findOne({
+        where: { id: id },
+        relations: { user: true },
+      });
+      if (!existTask) {
+        return {
+          code: HttpStatus.BAD_REQUEST,
+          success: false,
+          message: 'Delete task failed',
+          errors: [
+            {
+              field: 'id',
+              message: 'Task not found',
+            },
+          ],
+          task: null,
+        };
+      }
+
+      const user = await this.userRepo.findOne({
+        where: {
+          id: existTask.user.id,
+        },
+        relations: {
+          tasks: true,
+        },
+      });
+
+      user.tasks = user.tasks.filter((item) => item.id != id);
+
+      Promise.all([
+        await this.userRepo.save(user),
+        await this.taskRepo.delete({ id: id }),
+      ]);
+
+      return {
+        code: HttpStatus.OK,
+        success: true,
+        message: 'Delete task success',
+        errors: [],
+        task: {
+          id: id,
+          task_name: existTask.task_name,
+        },
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
   private convertStringToMinute(time: string) {

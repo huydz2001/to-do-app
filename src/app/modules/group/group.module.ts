@@ -18,5 +18,6 @@ import { RequestService } from 'src/app/shared/service/request.service';
     UserFactory,
     RequestService,
   ],
+  exports: [GroupFactory, GroupService],
 })
 export class GroupModule {}

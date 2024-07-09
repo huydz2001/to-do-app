@@ -8,15 +8,15 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AuthGuard } from '@nestjs/passport';
-import { RoleGroupAuth } from 'src/app/common';
+import { RoleGroupAuth, TYPE_REQUEST } from 'src/app/common';
 import {
+  AddAndRemoveUserInput,
   AddAndRemoveUserResponse,
-  CreateGroupRequest,
-  CreateGroupResponse,
+  DeleteGroupResponse,
+  UpsertGroupRequest,
+  UpsertGroupResponse,
 } from 'src/app/dtos';
-import { AddAndRemoveUserInput } from 'src/app/dtos/group/addAndRemoveInput.dto';
-import { DeleteGroupResponse } from 'src/app/dtos/group/deleteResponse.dto';
+
 import { Group, User } from 'src/app/entities';
 import { GroupService, UserService } from 'src/app/services';
 
@@ -34,19 +34,25 @@ export class GroupResolver {
 
   @ResolveField('members', (returns) => [User])
   async posts(@Parent() group: Group) {
-    const ids = group.members.map((item) => {
-      return item.id;
-    });
-    return this.userService.findByIds(ids);
+    return group.members;
   }
 
-  @Mutation((type) => CreateGroupResponse, { name: 'createGroup' })
+  @Mutation((type) => UpsertGroupResponse, { name: 'createGroup' })
   async create(
-    @Args('req') req: CreateGroupRequest,
-  ): Promise<CreateGroupResponse> {
-    return await this.groupService.create(req);
+    @Args('req') req: UpsertGroupRequest,
+  ): Promise<UpsertGroupResponse> {
+    return await this.groupService.upsert(TYPE_REQUEST.create, req);
   }
 
+  @UseGuards(RoleGroupAuth)
+  @Mutation((type) => UpsertGroupResponse, { name: 'updateGroup' })
+  async update(
+    @Args('req') req: UpsertGroupRequest,
+  ): Promise<UpsertGroupResponse> {
+    return await this.groupService.upsert(TYPE_REQUEST.update, req);
+  }
+
+  @UseGuards(RoleGroupAuth)
   @Mutation((type) => AddAndRemoveUserResponse, { name: 'deleteUserGroup' })
   async removeUser(
     @Args('req') req: AddAndRemoveUserInput,
@@ -54,6 +60,7 @@ export class GroupResolver {
     return await this.groupService.removeUser(req);
   }
 
+  @UseGuards(RoleGroupAuth)
   @Mutation((type) => AddAndRemoveUserResponse, { name: 'addUserGroup' })
   async addUser(
     @Args('req') req: AddAndRemoveUserInput,
