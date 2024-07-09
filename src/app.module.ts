@@ -1,16 +1,26 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { JwtModule } from '@nestjs/jwt';
-import { ApiKeyMiddleware, AuthencationMiddleware } from './app/common';
-import { AuthModule, GroupModule, TaskModule, UserModule } from './app/modules';
-import { ConfigData, DatabaseModule, RequestModule } from './app/shared';
-import { RequestService } from './app/shared/service/request.service';
-import { UserFactory } from './app/factories';
+import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ApiKeyMiddleware, AuthencationMiddleware } from './app/common';
+import { UploadController } from './app/controller';
 import { Token, User } from './app/entities';
-import { AuthService } from './app/services';
+import { UserFactory } from './app/factories';
+import { AuthModule, GroupModule, TaskModule, UserModule } from './app/modules';
+import { AuthService, GroupService, UserService } from './app/services';
+import {
+  CloudinaryModule,
+  CloudinaryProvider,
+  ConfigData,
+  DatabaseModule,
+  RequestModule,
+  UploadService,
+} from './app/shared';
+import { RequestService } from './app/shared/service/request.service';
+import { memoryStorage } from 'multer';
 
 @Module({
   imports: [
@@ -25,6 +35,14 @@ import { AuthService } from './app/services';
         dateScalarMode: 'timestamp',
       },
     }),
+    MulterModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        storage: memoryStorage(),
+        dest: configService.get<string>('MULTER_DEST'),
+      }),
+      inject: [ConfigService],
+    }),
     JwtModule.register({
       global: true,
       signOptions: { expiresIn: '1h' },
@@ -36,8 +54,9 @@ import { AuthService } from './app/services';
     UserModule,
     AuthModule,
     RequestModule,
+    CloudinaryModule,
   ],
-  controllers: [],
+  controllers: [UploadController],
   providers: [RequestService, AuthService, UserFactory, ConfigData],
   exports: [RequestService],
 })

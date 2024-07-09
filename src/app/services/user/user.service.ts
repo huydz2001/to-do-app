@@ -52,6 +52,10 @@ export class UserService {
     });
   }
 
+  async updateAvatar(id: number, file: string) {
+    return await this.userRepo.update({ id: id }, { avatar: file });
+  }
+
   async changePass(
     id: number,
     req: ChangePassInput,
