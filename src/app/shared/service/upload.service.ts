@@ -1,14 +1,9 @@
-import { Injectable, Module } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common';
 import {
   v2 as cloudinary,
   UploadApiErrorResponse,
   UploadApiResponse,
 } from 'cloudinary';
-import { Group, User } from 'src/app/entities';
-import { GroupModule, UserModule } from 'src/app/modules';
-import { GroupService, UserService } from 'src/app/services';
-import { Repository } from 'typeorm';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const streamifier = require('streamifier');
 
@@ -17,8 +12,6 @@ export class UploadService {
   constructor() {}
 
   uploadFile(
-    entity: string,
-    id: number,
     file: Express.Multer.File,
   ): Promise<UploadApiResponse | UploadApiErrorResponse> {
     return new Promise((resolve, reject) => {
