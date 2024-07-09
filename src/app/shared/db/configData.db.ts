@@ -19,11 +19,4 @@ export class ConfigData {
     entity.updated_by = userId;
     return entity;
   }
-
-  deleteData<T extends BaseModel>(userId: number, entity: T, dateTime?: Date) {
-    entity.isDelete = !entity.isDelete;
-    entity.updated_at = dateTime ? dateTime : new Date();
-    entity.updated_by = userId;
-    return entity;
-  }
 }

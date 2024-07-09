@@ -6,21 +6,23 @@ import { UserResolver } from 'src/app/resolvers';
 import { GroupService, UserService } from 'src/app/services';
 import { RequestModule, RequestService } from 'src/app/shared';
 import { ConfigData } from 'src/app/shared/db/configData.db';
+import { TaskModule } from '../task/task.module';
+import { GroupModule } from '../group/group.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Task, Group, Token]),
     RequestModule,
+    TaskModule,
+    GroupModule,
   ],
   providers: [
     UserResolver,
     UserFactory,
     UserService,
     ConfigData,
-    GroupService,
-    GroupFactory,
     RequestService,
   ],
-  exports: [],
+  exports: [UserFactory, UserService],
 })
 export class UserModule {}

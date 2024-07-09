@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
-import { STATUS } from 'src/app/common/constants';
-import { CreateGroupRequest } from 'src/app/dtos';
+import { UpsertGroupRequest } from 'src/app/dtos';
 import { Group } from 'src/app/entities';
 
 @Injectable()
 export class GroupFactory {
-  convertCreateRequestInputToModel(group: CreateGroupRequest): Group {
+  convertUpsertRequestInputToModel(group: UpsertGroupRequest): Group {
     return {
-      id: null,
+      id: group.id ? group.id : null,
       members: [],
       group_name: group.group_name,
       avatar: group.avatar,

@@ -12,7 +12,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
-    console.log('ex::', exception);
     // In certain situations `httpAdapter` might not be available in the
     // constructor method, thus we should resolve it here.
     const { httpAdapter } = this.httpAdapterHost;
@@ -28,8 +27,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode: httpStatus,
       timestamp: new Date().toISOString(),
     };
-
-    console.log(ctx.getResponse());
 
     httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
   }

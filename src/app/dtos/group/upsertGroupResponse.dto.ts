@@ -11,11 +11,11 @@ export class GroupResponse {
 }
 
 @ObjectType()
-export class CreateGroupResponse extends BaseResponse {
-  @Field()
+export class UpsertGroupResponse extends BaseResponse {
+  @Field({ nullable: true })
   group: GroupResponse;
 
-  constructor(item: Partial<CreateGroupResponse>) {
+  constructor(item: Partial<UpsertGroupResponse>) {
     super();
     Object.assign(this, item);
   }

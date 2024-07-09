@@ -1,46 +1,98 @@
-import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { STATUS, TYPE_REQUEST } from 'src/app/common';
 import {
+  AddAndRemoveUserInput,
   AddAndRemoveUserResponse,
-  CreateGroupRequest,
-  CreateGroupResponse,
+  DeleteGroupResponse,
+  UpsertGroupRequest,
+  UpsertGroupResponse,
 } from 'src/app/dtos';
-import { GroupFactory } from 'src/app/factories';
 import { Group, User } from 'src/app/entities';
+import { GroupFactory } from 'src/app/factories';
 import { ConfigData } from 'src/app/shared';
-import { In, Repository } from 'typeorm';
+import { Connection, In, Not, Repository } from 'typeorm';
 import { UserService } from '../user/user.service';
-import { STATUS } from 'src/app/common';
-import { AddAndRemoveUserInput } from 'src/app/dtos/group/addAndRemoveInput.dto';
-import { DeleteGroupResponse } from 'src/app/dtos/group/deleteResponse.dto';
-import { RequestService } from 'src/app/shared/service/request.service';
 
 @Injectable()
 export class GroupService {
-  public userLogin = 16;
+  public userLogin = 18;
   constructor(
     @InjectRepository(Group) private readonly groupRepo: Repository<Group>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     private readonly userService: UserService,
     private readonly groupFactory: GroupFactory,
     private readonly configData: ConfigData,
+    private readonly connection: Connection,
   ) {}
 
-  async create(req: CreateGroupRequest): Promise<CreateGroupResponse> {
+  async upsert(
+    type: string,
+    req: UpsertGroupRequest,
+  ): Promise<UpsertGroupResponse> {
     const { members, ...groupInfor } = req;
-    const listUser = await this.userRepo.findBy({ id: In(members) });
     let flag = true;
     const error = [];
 
+    const oldIds = [];
+    let idsResult = [];
+    let idsReject = [];
+    let listUser: User[];
+    let listUserReject: User[];
+
+    // [18, 19]  [19, 20]  => [19, 20]
+    // b1:  tim tat ca thang trung
+    // b2: lay tat ca cac thang khac trong mang moi truyen vao
+    // result: reject = [18], result = [19,20]
+
+    // get all member of group
+    if (groupInfor.id) {
+      const existGroup = await this.groupRepo.findOne({
+        where: { id: groupInfor.id },
+        relations: { members: true },
+      });
+      existGroup.members.forEach((item) => {
+        oldIds.push(item.id);
+      });
+
+      const idsBetween = this.findCommonElements(members, oldIds);
+
+      idsReject = oldIds.filter((id) => !idsBetween.includes(id));
+      idsResult = [
+        ...idsBetween,
+        ...members.filter((id) => !idsBetween.includes(id)),
+      ];
+
+      listUser = await this.userRepo.findBy({ id: In(idsResult) });
+      listUserReject = await this.userRepo.findBy({ id: In(idsReject) });
+    } else {
+      listUser = await this.userRepo.findBy({ id: In(members) });
+    }
+
+    console.log(listUser);
+
     // check groupName
-    const existGroup = await this.groupRepo.findOneBy({
-      group_name: groupInfor.group_name,
-    });
+    let existGroup: Group;
+    if (groupInfor.id) {
+      existGroup = await this.groupRepo.findOne({
+        where: {
+          group_name: groupInfor.group_name,
+          id: Not(In(Array.of(Number(groupInfor.id)))),
+        },
+      });
+    } else {
+      existGroup = await this.groupRepo.findOne({
+        where: {
+          group_name: groupInfor.group_name,
+        },
+      });
+    }
+
     if (existGroup) {
       return {
         code: HttpStatus.BAD_REQUEST,
         success: false,
-        message: 'Create group fail',
+        message: `${type} group failed`,
         errors: [
           {
             field: 'group_name',
@@ -53,41 +105,62 @@ export class GroupService {
 
     // check user joined an other group
     listUser.forEach((item) => {
-      if (item.status != STATUS.NOT_JOIN) {
+      if (item.status != STATUS.NOT_JOIN && !oldIds.includes(item.id)) {
         flag = false;
         error.push({
           field: 'members',
           message: `member ${item.id} already joined an other group`,
         });
+        return;
       }
     });
 
     // continue if don't have any error
     if (flag) {
-      const group = this.groupFactory.convertCreateRequestInputToModel(req);
-      // get infor user from login
-      this.configData.createdData(this.userLogin, group);
+      let group = this.groupFactory.convertUpsertRequestInputToModel(req);
       group.members = listUser;
+      if (type == TYPE_REQUEST.create) {
+        group = this.configData.createdData(this.userLogin, group);
+      } else {
+        group = this.configData.updatedData(this.userLogin, group);
+      }
 
-      await this.groupRepo.save(group);
-      listUser.forEach(async (item) => {
+      // update status user who are inserted into group
+      listUser.map((item) => {
         if (item.id == group.created_by) {
           item.status = STATUS.CREATE;
         } else item.status = STATUS.JOINED;
         item = this.configData.updatedData(this.userLogin, item);
-        await this.userRepo.update(item.id, item);
+        return item;
       });
 
-      const { id, group_name, ...groupData } = group;
+      // Update users who are disqualified from the group
+      if (listUserReject) {
+        listUserReject.map((item) => {
+          item.status = STATUS.NOT_JOIN;
+          item = this.configData.updatedData(this.userLogin, item);
+          return item;
+        });
+        Promise.all([
+          await this.userRepo.save(listUser),
+          await this.userRepo.save(listUserReject),
+          await this.groupRepo.save(group),
+        ]);
+      } else {
+        Promise.all([
+          await this.userRepo.save(listUser),
+          await this.groupRepo.save(group),
+        ]);
+      }
 
       return {
         code: HttpStatus.OK,
         success: true,
-        message: 'Create group success',
+        message: `${type} group success`,
         errors: [],
         group: {
-          id: id,
-          group_name: group_name,
+          id: group.id,
+          group_name: group.group_name,
         },
       };
     }
@@ -95,7 +168,7 @@ export class GroupService {
     return {
       code: HttpStatus.BAD_REQUEST,
       success: false,
-      message: 'Create group fail',
+      message: `${type} group failed`,
       errors: error,
       group: null,
     };
@@ -131,76 +204,80 @@ export class GroupService {
     });
   }
 
+  async findGroupByAdmin(id: number) {
+    return await this.groupRepo.findOne({ where: { created_by: id } });
+  }
+
   async findById(id: number) {
     return await this.groupRepo.findOneBy({ id: id });
   }
 
   async addUser(req: AddAndRemoveUserInput): Promise<AddAndRemoveUserResponse> {
     const { groupId, userId } = req;
-    let existGroup = await this.groupRepo.findOne({
-      where: { id: groupId },
-      relations: {
-        members: true,
-      },
-    });
-
-    // check exist group
-    if (!existGroup) {
-      return {
-        code: HttpStatus.BAD_REQUEST,
-        success: false,
-        message: 'Group not found',
-        errors: [
-          {
-            field: 'id',
-            message: 'GroupId not exist',
-          },
-        ],
-        groupId: null,
-        user: null,
-      };
-    }
-
-    // check exist user and joined group
-    let existUser = await this.userRepo.findOneBy({ id: userId });
-    if (!existUser) {
-      return {
-        code: HttpStatus.BAD_REQUEST,
-        success: false,
-        message: 'User not found',
-        errors: [
-          {
-            field: 'userId',
-            message: 'userId not exist',
-          },
-        ],
-        groupId: null,
-        user: null,
-      };
-    } else if (existUser.status != STATUS.NOT_JOIN) {
-      return {
-        code: HttpStatus.BAD_REQUEST,
-        success: false,
-        message: 'User already joined an orther group',
-        errors: [
-          {
-            field: 'userId',
-            message: 'user already joined an other group',
-          },
-        ],
-        groupId: null,
-        user: null,
-      };
-    }
-
-    existGroup.members.push(existUser);
-    existGroup = this.configData.updatedData(this.userLogin, existGroup);
-
-    existUser.status = STATUS.JOINED;
-    existUser.group = existGroup;
-    existUser = this.configData.updatedData(this.userLogin, existUser);
-
     try {
+      let existGroup = await this.groupRepo.findOne({
+        where: { id: groupId },
+        relations: {
+          members: true,
+        },
+      });
+
+      // check exist group
+      if (!existGroup) {
+        return {
+          code: HttpStatus.BAD_REQUEST,
+          success: false,
+          message: 'Group not found',
+          errors: [
+            {
+              field: 'id',
+              message: 'GroupId not exist',
+            },
+          ],
+          groupId: null,
+          user: null,
+        };
+      }
+
+      // check exist user and joined group
+      let existUser = await this.userRepo.findOneBy({ id: userId });
+      if (!existUser) {
+        return {
+          code: HttpStatus.BAD_REQUEST,
+          success: false,
+          message: 'User not found',
+          errors: [
+            {
+              field: 'userId',
+              message: 'userId not exist',
+            },
+          ],
+          groupId: null,
+          user: null,
+        };
+      } else if (existUser.status != STATUS.NOT_JOIN) {
+        return {
+          code: HttpStatus.BAD_REQUEST,
+          success: false,
+          message: 'User already joined an orther group',
+          errors: [
+            {
+              field: 'userId',
+              message: 'user already joined an other group',
+            },
+          ],
+          groupId: null,
+          user: null,
+        };
+      }
+
+      existGroup.members.push(existUser);
+      existGroup = this.configData.updatedData(this.userLogin, existGroup);
+
+      existUser.status = STATUS.JOINED;
+      existUser.group = existGroup;
+      existUser = this.configData.updatedData(this.userLogin, existUser);
+
       await this.groupRepo.save(existGroup);
       await this.userRepo.save(existUser);
       return {
@@ -301,7 +378,7 @@ export class GroupService {
       return {
         code: HttpStatus.OK,
         success: true,
-        message: 'User not found',
+        message: 'Remove user success',
         errors: [],
         groupId: groupId,
         user: {
@@ -316,7 +393,7 @@ export class GroupService {
 
   async delete(id: number): Promise<DeleteGroupResponse> {
     try {
-      let existGroup = await this.groupRepo.findOne({
+      const existGroup = await this.groupRepo.findOne({
         where: { id: id },
         relations: { members: true },
       });
@@ -335,18 +412,16 @@ export class GroupService {
         };
       }
 
-      existGroup = this.configData.deleteData(this.userLogin, existGroup);
-
       const listUser = existGroup.members.map((item) => {
         item.group = null;
         item.status = STATUS.NOT_JOIN;
-        item = this.configData.deleteData(this.userLogin, item);
+        item = this.configData.updatedData(this.userLogin, item);
         return item;
       });
 
       Promise.all([
         await this.userRepo.save(listUser),
-        await this.groupRepo.save(existGroup),
+        await this.groupRepo.delete({ id: id }),
       ]);
 
       return {
@@ -362,5 +437,17 @@ export class GroupService {
     } catch (error) {
       throw error;
     }
+  }
+
+  private findCommonElements(array1, array2) {
+    const commonElements = [];
+
+    for (const element1 of array1) {
+      if (array2.includes(element1)) {
+        commonElements.push(element1);
+      }
+    }
+
+    return commonElements;
   }
 }

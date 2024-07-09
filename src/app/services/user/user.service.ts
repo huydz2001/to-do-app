@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +6,14 @@ import { UserFactory } from 'src/app/factories';
 import { User, Group } from 'src/app/entities';
 import { ConfigData, RequestService } from 'src/app/shared';
 import { In, Repository } from 'typeorm';
+import {
+  ChangePassInput,
+  ChangePassResponse,
+  UpdateProfileInput,
+  UpdateProfileResponse,
+} from 'src/app/dtos';
+import * as brcypt from 'bcrypt';
+import { STATUS } from 'src/app/common';
 
 @Injectable()
 export class UserService {
@@ -18,10 +26,8 @@ export class UserService {
     private readonly requestService: RequestService,
   ) {}
 
-  getUsers() {
-    console.log(this.requestService.getUserId());
-
-    return this.userRepo.find({
+  async getUsers() {
+    return await this.userRepo.find({
       relations: {
         group: true,
         tasks: true,
@@ -29,11 +35,132 @@ export class UserService {
     });
   }
 
-  findById(id: number) {
-    return this.userRepo.findOneBy({ id: id });
+  async findById(id: number) {
+    return await this.userRepo.findOneBy({ id: id });
   }
 
-  findByIds(ids: number[]) {
-    return this.userRepo.findBy({ id: In(ids) });
+  async findByIds(ids: number[]) {
+    return await this.userRepo.findBy({ id: In(ids) });
+  }
+
+  async findUserAdmin(id: number) {
+    return await this.userRepo.findOne({
+      where: {
+        id: id,
+        status: STATUS.CREATE,
+      },
+    });
+  }
+
+  async changePass(
+    id: number,
+    req: ChangePassInput,
+  ): Promise<ChangePassResponse> {
+    let existUser = await this.userRepo.findOneBy({ id: id });
+
+    if (!existUser) {
+      return {
+        code: HttpStatus.BAD_REQUEST,
+        success: false,
+        message: 'Change password failed',
+        errors: [
+          {
+            field: 'id',
+            message: 'User not found',
+          },
+        ],
+        id: null,
+      };
+    }
+
+    const isComparePass = await brcypt.compareSync(
+      req.oldPass,
+      existUser.password,
+    );
+
+    if (!isComparePass) {
+      return {
+        code: HttpStatus.BAD_REQUEST,
+        success: false,
+        message: 'Change password failed',
+        errors: [
+          {
+            field: 'oldPass',
+            message: 'Password not correct',
+          },
+        ],
+        id: null,
+      };
+    }
+
+    const newHashPass = await brcypt.hashSync(req.newPass, 10);
+    existUser.password = newHashPass;
+
+    existUser = this.configData.updatedData(existUser.id, existUser);
+
+    await this.userRepo.save(existUser);
+
+    return {
+      code: HttpStatus.OK,
+      success: true,
+      message: 'Change password success',
+      errors: [],
+      id: id,
+    };
+  }
+
+  async updateProfile(
+    id: number,
+    req: UpdateProfileInput,
+  ): Promise<UpdateProfileResponse> {
+    let existUser = await this.userRepo.findOneBy({ id: id });
+
+    if (!existUser) {
+      return {
+        code: HttpStatus.BAD_REQUEST,
+        success: false,
+        message: 'Update profile failed',
+        errors: [
+          {
+            field: 'id',
+            message: 'User not found',
+          },
+        ],
+        id: null,
+      };
+    }
+
+    const userFindUsername = await this.userRepo.findOneBy({
+      user_name: req.user_name,
+    });
+    if (userFindUsername) {
+      return {
+        code: HttpStatus.BAD_REQUEST,
+        success: false,
+        message: 'Update profile failed',
+        errors: [
+          {
+            field: 'user_name',
+            message: 'Username is already used by an other user',
+          },
+        ],
+        id: id,
+      };
+    }
+
+    existUser = this.configData.updatedData(id, existUser);
+    existUser.avatar = req.avatar;
+    existUser.dob = req.dob;
+    existUser.user_name = req.user_name;
+
+    await this.userRepo.save(existUser);
+
+    return {
+      code: HttpStatus.OK,
+      success: true,
+      message: 'Update profile success',
+      errors: [],
+      id: id,
+    };
   }
 }

@@ -11,10 +11,9 @@ export class UpsertTaskInput {
   @Field()
   task_name: string;
 
-  @IsDate()
   @IsNotEmpty()
   @Field()
-  start_date: Date;
+  start_date: string;
 
   @IsString()
   @IsNotEmpty()

@@ -33,7 +33,7 @@ export class TaskResolver {
 
   @ResolveField('user', (type) => User, { nullable: true })
   async getUser(@Parent() task: Task) {
-    return this.userService.getUsers();
+    return task.user;
   }
 
   @Mutation((type) => ActionTaskResponse, {
@@ -48,5 +48,12 @@ export class TaskResolver {
   })
   async updateTask(@Args('req') req: UpsertTaskInput) {
     return await this.taskService.upsert(TYPE_REQUEST.update, req);
+  }
+
+  @Mutation((type) => ActionTaskResponse, {
+    name: 'deleteTask',
+  })
+  async deleteTask(@Args('id', { type: () => Int }) id: number) {
+    return await this.taskService.delete(id);
   }
 }
