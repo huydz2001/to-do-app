@@ -91,11 +91,16 @@ export class AuthService {
 
   async login(req: LoginDataInput, res: Response): Promise<LoginResponse> {
     try {
-      const user = await this.userRepo.findOneBy(
-        req.emailOrUsername.includes('@')
+      const user = await this.userRepo.findOne({
+        where: req.emailOrUsername.includes('@')
           ? { email: req.emailOrUsername }
           : { user_name: req.emailOrUsername },
-      );
+        select: {
+          id: true,
+          email: true,
+          password: true,
+        },
+      });
 
       if (!user) {
         return {
@@ -236,7 +241,6 @@ export class AuthService {
   }
 
   private async generateToken(payload: any): Promise<any> {
-    console.log(payload);
     const accessToken = await this.jwtService.signAsync(payload, {
       expiresIn: 60 * 60,
       secret: this.configService.get<string>('JWT_SIGN_SECRET'),

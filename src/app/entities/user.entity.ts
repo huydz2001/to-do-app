@@ -1,10 +1,10 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { classToPlain, Exclude } from 'class-transformer';
 import { STATUS } from 'src/app/common/constants';
 import {
   Column,
   Entity,
   JoinColumn,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -12,6 +12,7 @@ import {
 import { BaseModel } from '../shared';
 import { Group } from './group.entity';
 import { Task } from './task.entity';
+import * as bcrypt from 'bcrypt';
 
 @Entity({ name: 'users' })
 @ObjectType()
@@ -28,8 +29,9 @@ export class User extends BaseModel {
   @Field({ nullable: false })
   email: string;
 
-  @Column()
-  @Field({ nullable: false })
+  @Column({ select: false })
+  @Exclude()
+  @Field({ nullable: true })
   password: string;
 
   @Column()

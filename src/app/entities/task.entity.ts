@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { BaseModel } from '../shared';
 import { User } from './user.entity';
+import { Transform } from 'class-transformer';
 
 @Entity({ name: 'tasks' })
 @ObjectType()
@@ -29,7 +30,7 @@ export class Task extends BaseModel {
     type: 'date',
   })
   @Field({ nullable: false })
-  start_date: Date;
+  start_date: string;
 
   @Column()
   @Field({ nullable: false })
