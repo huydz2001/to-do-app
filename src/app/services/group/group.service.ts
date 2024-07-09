@@ -439,6 +439,13 @@ export class GroupService {
     }
   }
 
+  async updateAvatar(id: number, url: string) {
+    let existGroup = await this.groupRepo.findOneBy({ id: id });
+    existGroup.avatar = url;
+    existGroup = this.configData.updatedData(this.userLogin, existGroup);
+    return await this.groupRepo.save(existGroup);
+  }
+
   private findCommonElements(array1, array2) {
     const commonElements = [];
 
