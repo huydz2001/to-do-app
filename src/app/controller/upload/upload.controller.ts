@@ -4,7 +4,7 @@ import {
   ParseFilePipe,
   Post,
   UploadedFile,
-  UseInterceptors
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from 'src/app/shared';
@@ -20,7 +20,7 @@ export class UploadController {
       new ParseFilePipe({
         validators: [
           //   new MaxFileSizeValidator({ maxSize: 1000 }),
-          new FileTypeValidator({ fileType: /\.(jpg|jpeg|png)$/ }),
+          // new FileTypeValidator({ fileType: /\.(jpg|jpeg|png)$/ }),
         ],
       }),
     )
