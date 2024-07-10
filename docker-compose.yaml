@@ -1,43 +1,57 @@
 version: '3.8'
 services:
   postgres:
-    container_name: pg_todo
     image: postgres
+    container_name: pg_todo
     env_file: .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      PGDATA: /data/postgres
     volumes:
-       - postgres:/data/postgres
+      - ./pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
       - postgres
     restart: unless-stopped
-  
+  todo:
+    image: nestjs
+    container_name: todo
+    restart: unless-stopped
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - postgres
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+    depends_on:
+      - postgres
   pgadmin:
-    container_name: pgadmin_todo
     image: dpage/pgadmin4
+    container_name: pgadmin_todo
     env_file: .env
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-    volumes:
-       - pgadmin:/var/lib/pgadmin
+    depends_on:
+      - postgres
     ports:
       - "5050:80"
     networks:
       - postgres
-    restart: unless-stopped
+    restart: always
 
 networks:
   postgres:
     driver: bridge
 
-volumes:
-    postgres:
-    pgadmin:
 
 
 #Create container, pull image ,...
@@ -48,3 +62,5 @@ volumes:
 # npm run docker:db:stop
 #Reset volumes
 # npm run db:dev:restart
+#Start app 
+# npm run dev:start
