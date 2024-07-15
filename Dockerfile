@@ -8,6 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install app dependencies
+# ReInstall bcrypr because docker run different os 
 RUN apt-get update && \
     apt-get install -y make g++ python3 && \
     npm ci && \

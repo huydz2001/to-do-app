@@ -8,7 +8,12 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { TYPE_REQUEST } from 'src/app/common';
-import { ActionTaskResponse, UpsertTaskInput } from 'src/app/dtos';
+import {
+  ActionTaskResponse,
+  TaskFillterInput,
+  UpsertTaskInput,
+} from 'src/app/dtos';
+import { GetTaskResponse } from 'src/app/dtos/task/getTaskResponse.dto';
 import { Task, User } from 'src/app/entities';
 import { TaskService, UserService } from 'src/app/services';
 
@@ -19,16 +24,16 @@ export class TaskResolver {
     private readonly userService: UserService,
   ) {}
 
-  @Query((returns) => [Task], { nullable: true, name: 'getAllTasks' })
-  async getAll(): Promise<Task[]> {
-    return await this.taskService.getAll();
-  }
-
-  @Query((returns) => [Task], { nullable: true })
-  async getAllTaskByUserId(
+  @Query((returns) => GetTaskResponse, { nullable: true, name: 'getAllTasks' })
+  async getAll(
+    @Args('fillter', { type: () => TaskFillterInput, nullable: true })
+    fillterTaskDto: TaskFillterInput,
     @Args('userId', { type: () => Int }) userId: number,
-  ): Promise<Task[]> {
-    return await this.taskService.getTasksByUser(userId);
+  ): Promise<GetTaskResponse> {
+    if (fillterTaskDto != null) {
+      return await this.taskService.fillterTask(userId, fillterTaskDto);
+    }
+    return await this.taskService.getAll(userId);
   }
 
   @ResolveField('user', (type) => User, { nullable: true })

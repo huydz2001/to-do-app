@@ -13,6 +13,7 @@
     "db:dev:restart": "npm run db:dev:remove && npm run db:dev:create",
     "docker:db:restart": "npm run docker:db:stop && npm run docker:db:start",
     "dev:start": "docker start pg_todo && docker start pgadmin_todo && docker start todo",
+    "dev:stop": "docker stop pg_todo && docker stop pgadmin_todo && docker stop todo",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
