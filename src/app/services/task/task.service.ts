@@ -1,7 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ADMIN_ID, TYPE_REQUEST } from 'src/app/common';
-import { ActionTaskResponse, UpsertTaskInput } from 'src/app/dtos';
+import { ADMIN_ID, SORT_DIRECTION, TYPE_REQUEST } from 'src/app/common';
+import {
+  ActionTaskResponse,
+  TaskFillterInput,
+  UpsertTaskInput,
+} from 'src/app/dtos';
+import { GetTaskResponse } from 'src/app/dtos/task/getTaskResponse.dto';
 import { Task, User } from 'src/app/entities';
 import { TaskFactory } from 'src/app/factories';
 import { ConfigData } from 'src/app/shared';
@@ -18,16 +23,91 @@ export class TaskService {
 
   public userLogin = ADMIN_ID;
 
-  async getAll(): Promise<Task[]> {
-    return await this.taskRepo.find({
+  async getAll(userId: number): Promise<GetTaskResponse> {
+    const tasks = await this.taskRepo.find({
+      where: {
+        user: {
+          id: userId,
+        },
+      },
       relations: {
         user: true,
       },
     });
+
+    console.log(tasks);
+
+    return {
+      code: HttpStatus.OK,
+      success: true,
+      message: 'Find tasks success',
+      errors: [],
+      tasks: tasks,
+    };
   }
 
-  findByIds(ids: number[]) {
-    return this.taskRepo.findBy({ id: In(ids) });
+  async fillterTask(
+    userId: number,
+    taskFiltter: TaskFillterInput,
+  ): Promise<GetTaskResponse> {
+    const { time, status, search, pagination, date, sort } = taskFiltter;
+    let tasks = (await this.getAll(userId)).tasks;
+    if (time) {
+      const timeRq = this.convertStringToMinute(time);
+      tasks = tasks.filter(
+        (item) =>
+          this.convertStringToMinute(item.start_time) <= timeRq &&
+          timeRq <= this.convertStringToMinute(item.end_time),
+      );
+    }
+
+    if (search) {
+      tasks = tasks.filter((item) => item.task_name.includes(search));
+    }
+
+    if (status) {
+      tasks = tasks.filter((item) => item.status == status);
+    }
+
+    if (pagination) {
+      const { page = 1, limit = 10 } = pagination;
+      const startIndex = (page - 1) * limit;
+      const lastIndex = startIndex + limit;
+      tasks = tasks.slice(startIndex, lastIndex);
+    }
+
+    if (date) {
+      tasks = tasks.filter((item) => item.start_date.toString() == date);
+    }
+
+    if (sort) {
+      const { field, direction } = sort;
+      tasks = tasks.sort((a, b) => {
+        let aValue = a[field] as string;
+        let bValue = b[field] as string;
+        if (field == 'start_time' || field == 'end_time') {
+          aValue = this.convertStringToMinute(a[field]).toString();
+          bValue = this.convertStringToMinute(b[field]).toString();
+        }
+
+        if (aValue < bValue) return direction === SORT_DIRECTION.ASC ? -1 : 1;
+        if (aValue > bValue) return direction === SORT_DIRECTION.ASC ? 1 : -1;
+        return 0;
+      });
+    }
+
+    tasks.map((item) => {
+      item.user = null;
+      return item;
+    });
+
+    return {
+      code: HttpStatus.OK,
+      success: true,
+      message: 'Find tasks success',
+      errors: [],
+      tasks: tasks,
+    };
   }
 
   async upsert(
@@ -125,16 +205,6 @@ export class TaskService {
     } catch (error) {
       throw error;
     }
-  }
-
-  async getTasksByUser(userId: number): Promise<Task[]> {
-    return await this.taskRepo.find({
-      where: {
-        user: {
-          id: userId,
-        },
-      },
-    });
   }
 
   async getTasksByUserAndDate(userId: number, date: string): Promise<Task[]> {

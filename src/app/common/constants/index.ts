@@ -24,3 +24,8 @@ export enum TYPE_REQUEST {
   create = 'create',
   delete = 'delete',
 }
+
+export enum SORT_DIRECTION {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}

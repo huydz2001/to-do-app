@@ -166,12 +166,38 @@ type RefreshTokenResponse {
   refreshToken: String
 }
 
+type GetTaskResponse {
+  code: Float!
+  success: Boolean!
+  message: String!
+  errors: [GraphQLError!]
+  tasks: [Task!]
+}
+
 type Query {
-  getAllTasks: [Task!]
-  getAllTaskByUserId(userId: Int!): [Task!]
+  getAllTasks(fillter: TaskFillterInput, userId: Int!): GetTaskResponse
   getAllGroups: [Group!]
   getAllUsers: [User!]
   login(req: LoginDataInput!): LoginResponse!
+}
+
+input TaskFillterInput {
+  time: String
+  date: String
+  status: Int
+  search: String
+  pagination: PaginationInput
+  sort: SortInput
+}
+
+input PaginationInput {
+  page: Int = 1
+  limit: Int = 10
+}
+
+input SortInput {
+  field: String!
+  direction: String! = "ASC"
 }
 
 input LoginDataInput {
