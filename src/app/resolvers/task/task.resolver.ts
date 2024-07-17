@@ -33,7 +33,6 @@ export class TaskResolver {
     if (fillterTaskDto != null) {
       return await this.taskService.fillterTask(userId, fillterTaskDto);
     }
-    return await this.taskService.getAll(userId);
   }
 
   @ResolveField('user', (type) => User, { nullable: true })

@@ -12,8 +12,8 @@ import {
   LogoutResponse,
   RefreshTokenResponse,
 } from 'src/app/dtos';
-import { UserFactory } from 'src/app/factories';
 import { Token, User } from 'src/app/entities';
+import { UserFactory } from 'src/app/factories';
 import { ConfigData, RequestService } from 'src/app/shared';
 import { Repository } from 'typeorm';
 
@@ -32,7 +32,7 @@ export class AuthService {
   async crateUser(req: CreateDataInput): Promise<CreateUserResponse> {
     try {
       const existingUser = await this.userRepo.findOne({
-        where: [{ user_name: req.user_name }],
+        where: [{ name: req.name }],
       });
 
       if (existingUser) {
@@ -45,8 +45,8 @@ export class AuthService {
               : 'Username already exist',
           errors: [
             {
-              field: existingUser.email == req.email ? 'email' : 'user_name',
-              message: `${existingUser.email == req.email ? 'email' : 'user_name'} already exist`,
+              field: existingUser.email == req.email ? 'email' : 'name',
+              message: `${existingUser.email == req.email ? 'email' : 'name'} already exist`,
             },
           ],
           user: null,
@@ -54,10 +54,10 @@ export class AuthService {
       }
 
       let user = await this.userFactory.convertCreateRequestInputToModel(req);
-      user = this.configData.createdData(ADMIN_ID, user);
+      user = this.configData.createdData(user);
       await this.userRepo.save(user);
 
-      const { id, email, user_name, ...userInfor } = user;
+      const { id, email, name, ...userInfor } = user;
       return {
         code: HttpStatus.OK,
         success: true,
@@ -66,7 +66,7 @@ export class AuthService {
         user: {
           id: id,
           email: email,
-          username: user_name,
+          username: name,
         },
       };
     } catch (err) {
@@ -94,7 +94,7 @@ export class AuthService {
       const user = await this.userRepo.findOne({
         where: req.emailOrUsername.includes('@')
           ? { email: req.emailOrUsername }
-          : { user_name: req.emailOrUsername },
+          : { name: req.emailOrUsername },
         select: {
           id: true,
           email: true,
@@ -260,9 +260,7 @@ export class AuthService {
         token: token,
         userId: userId,
         created_at: new Date(),
-        created_by: userId,
         updated_at: new Date(),
-        updated_by: userId,
         isDelete: false,
       },
       ['userId'],

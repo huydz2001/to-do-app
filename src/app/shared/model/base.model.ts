@@ -8,19 +8,15 @@ export class BaseModel {
   @Field({ defaultValue: false, nullable: false })
   isDelete: boolean;
 
-  @Column()
+  @Column({
+    type: 'timestamp without time zone',
+  })
   @Field({ defaultValue: null, nullable: false })
   created_at: Date;
 
-  @Column()
-  @Field((type) => Int, { defaultValue: null, nullable: false })
-  created_by: number;
-
-  @Column()
+  @Column({
+    type: 'timestamp without time zone',
+  })
   @Field({ defaultValue: null, nullable: false })
   updated_at: Date;
-
-  @Column()
-  @Field((type) => Int, { defaultValue: null, nullable: false })
-  updated_by: number;
 }

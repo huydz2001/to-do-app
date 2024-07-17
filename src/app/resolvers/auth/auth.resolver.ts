@@ -1,5 +1,6 @@
 import { Res } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { query } from 'express';
 import {
   CreateDataInput,
   CreateUserResponse,
@@ -14,7 +15,7 @@ import { AuthService } from 'src/app/services';
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
-  @Query((returns) => LoginResponse)
+  @Mutation((returns) => LoginResponse)
   async login(
     @Args('req') req: LoginDataInput,
     @Res({ passthrough: true }) res: Response,

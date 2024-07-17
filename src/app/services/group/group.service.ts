@@ -11,8 +11,7 @@ import {
 import { Group, User } from 'src/app/entities';
 import { GroupFactory } from 'src/app/factories';
 import { ConfigData } from 'src/app/shared';
-import { Connection, In, Not, Repository } from 'typeorm';
-import { UserService } from '../user/user.service';
+import { In, Not, Repository } from 'typeorm';
 
 @Injectable()
 export class GroupService {
@@ -20,10 +19,8 @@ export class GroupService {
   constructor(
     @InjectRepository(Group) private readonly groupRepo: Repository<Group>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
-    private readonly userService: UserService,
     private readonly groupFactory: GroupFactory,
     private readonly configData: ConfigData,
-    private readonly connection: Connection,
   ) {}
 
   async upsert(
@@ -68,8 +65,6 @@ export class GroupService {
     } else {
       listUser = await this.userRepo.findBy({ id: In(members) });
     }
-
-    console.log(listUser);
 
     // check groupName
     let existGroup: Group;
@@ -120,17 +115,17 @@ export class GroupService {
       let group = this.groupFactory.convertUpsertRequestInputToModel(req);
       group.members = listUser;
       if (type == TYPE_REQUEST.create) {
-        group = this.configData.createdData(this.userLogin, group);
+        group = this.configData.createdData(group);
       } else {
-        group = this.configData.updatedData(this.userLogin, group);
+        group = this.configData.updatedData(group);
       }
 
       // update status user who are inserted into group
       listUser.map((item) => {
-        if (item.id == group.created_by) {
+        if (item.id == req.create_by) {
           item.status = STATUS.CREATE;
         } else item.status = STATUS.JOINED;
-        item = this.configData.updatedData(this.userLogin, item);
+        item = this.configData.updatedData(item);
         return item;
       });
 
@@ -138,7 +133,7 @@ export class GroupService {
       if (listUserReject) {
         listUserReject.map((item) => {
           item.status = STATUS.NOT_JOIN;
-          item = this.configData.updatedData(this.userLogin, item);
+          item = this.configData.updatedData(item);
           return item;
         });
         Promise.all([
@@ -202,10 +197,6 @@ export class GroupService {
         members: true,
       },
     });
-  }
-
-  async findGroupByAdmin(id: number) {
-    return await this.groupRepo.findOne({ where: { created_by: id } });
   }
 
   async findById(id: number) {
@@ -272,11 +263,11 @@ export class GroupService {
       }
 
       existGroup.members.push(existUser);
-      existGroup = this.configData.updatedData(this.userLogin, existGroup);
+      existGroup = this.configData.updatedData(existGroup);
 
       existUser.status = STATUS.JOINED;
       existUser.group = existGroup;
-      existUser = this.configData.updatedData(this.userLogin, existUser);
+      existUser = this.configData.updatedData(existUser);
 
       await this.groupRepo.save(existGroup);
       await this.userRepo.save(existUser);
@@ -288,7 +279,7 @@ export class GroupService {
         groupId: groupId,
         user: {
           id: userId,
-          user_name: existUser.user_name,
+          user_name: existUser.name,
         },
       };
     } catch (error) {
@@ -364,11 +355,11 @@ export class GroupService {
       existGroup.members = existGroup.members.filter(
         (member) => member.id !== userId,
       );
-      existGroup = this.configData.updatedData(this.userLogin, existGroup);
+      existGroup = this.configData.updatedData(existGroup);
 
       existUser.group = null;
       existUser.status = STATUS.NOT_JOIN;
-      existUser = this.configData.updatedData(this.userLogin, existUser);
+      existUser = this.configData.updatedData(existUser);
 
       Promise.all([
         await this.userRepo.save(existUser),
@@ -383,7 +374,7 @@ export class GroupService {
         groupId: groupId,
         user: {
           id: userId,
-          user_name: existUser.user_name,
+          user_name: existUser.name,
         },
       };
     } catch (error) {
@@ -415,7 +406,7 @@ export class GroupService {
       const listUser = existGroup.members.map((item) => {
         item.group = null;
         item.status = STATUS.NOT_JOIN;
-        item = this.configData.updatedData(this.userLogin, item);
+        item = this.configData.updatedData(item);
         return item;
       });
 
@@ -442,7 +433,7 @@ export class GroupService {
   async updateAvatar(id: number, url: string) {
     let existGroup = await this.groupRepo.findOneBy({ id: id });
     existGroup.avatar = url;
-    existGroup = this.configData.updatedData(this.userLogin, existGroup);
+    existGroup = this.configData.updatedData(existGroup);
     return await this.groupRepo.save(existGroup);
   }
 

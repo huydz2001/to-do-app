@@ -20,4 +20,7 @@ export class UpsertGroupRequest {
 
   @Field((type) => [Int])
   members: [number];
+
+  @Field((type) => Int)
+  create_by: number;
 }
