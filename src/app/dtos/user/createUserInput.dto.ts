@@ -11,7 +11,7 @@ export class CreateDataInput {
   @Field()
   @IsNotEmpty()
   @IsString()
-  user_name: string;
+  name: string;
 
   @IsNotEmpty()
   @IsString()

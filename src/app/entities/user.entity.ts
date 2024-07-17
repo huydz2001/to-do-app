@@ -23,7 +23,7 @@ export class User extends BaseModel {
 
   @Column({ unique: true })
   @Field({ nullable: false })
-  user_name: string;
+  name: string;
 
   @Column({ unique: true })
   @Field({ nullable: false })

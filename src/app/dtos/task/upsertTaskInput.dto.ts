@@ -1,4 +1,5 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
+import { Transform } from 'class-transformer';
 import { IsDate, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 @InputType()
@@ -9,21 +10,19 @@ export class UpsertTaskInput {
   @IsString()
   @IsNotEmpty()
   @Field()
-  task_name: string;
+  name: string;
 
   @IsNotEmpty()
   @Field()
   start_date: string;
 
-  @IsString()
   @IsNotEmpty()
   @Field()
-  start_time: string;
+  start_time: Date;
 
-  @IsString()
   @IsNotEmpty()
   @Field()
-  end_time: string;
+  end_time: Date;
 
   @IsString()
   @MaxLength(100)

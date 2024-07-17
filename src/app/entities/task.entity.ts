@@ -1,4 +1,5 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Transform } from 'class-transformer';
 import { STATUS_TASK } from 'src/app/common/constants';
 import {
   Column,
@@ -9,7 +10,6 @@ import {
 } from 'typeorm';
 import { BaseModel } from '../shared';
 import { User } from './user.entity';
-import { Transform } from 'class-transformer';
 
 @Entity({ name: 'tasks' })
 @ObjectType()
@@ -18,9 +18,9 @@ export class Task extends BaseModel {
   @Field((type) => Int)
   id: number;
 
-  @Column()
+  @Column({ nullable: false })
   @Field({ nullable: false })
-  task_name: string;
+  name: string;
 
   @ManyToOne(() => User, (user) => user.tasks)
   @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'fk_task_user' })
@@ -32,13 +32,17 @@ export class Task extends BaseModel {
   @Field({ nullable: false })
   start_date: string;
 
-  @Column()
-  @Field({ nullable: false })
-  start_time: string;
+  @Column({
+    type: 'timestamp without time zone',
+  })
+  @Field((type) => Date, { nullable: false })
+  start_time: Date;
 
-  @Column()
+  @Column({
+    type: 'timestamp without time zone',
+  })
   @Field({ nullable: false })
-  end_time: string;
+  end_time: Date;
 
   @Column()
   @Field({ nullable: false, defaultValue: STATUS_TASK.NOT_STARTED })

@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ADMIN_ID, SORT_DIRECTION, TYPE_REQUEST } from 'src/app/common';
+import * as dayjs from 'dayjs';
+import { TYPE_REQUEST } from 'src/app/common';
 import {
   ActionTaskResponse,
   TaskFillterInput,
@@ -10,7 +11,15 @@ import { GetTaskResponse } from 'src/app/dtos/task/getTaskResponse.dto';
 import { Task, User } from 'src/app/entities';
 import { TaskFactory } from 'src/app/factories';
 import { ConfigData } from 'src/app/shared';
-import { In, Raw, Repository } from 'typeorm';
+import {
+  FindOptionsOrder,
+  FindOptionsWhere,
+  LessThanOrEqual,
+  Like,
+  MoreThanOrEqual,
+  Raw,
+  Repository,
+} from 'typeorm';
 
 @Injectable()
 export class TaskService {
@@ -21,19 +30,60 @@ export class TaskService {
     private readonly configData: ConfigData,
   ) {}
 
-  public userLogin = ADMIN_ID;
+  async fillterTask(
+    userId: number,
+    taskFiltter: TaskFillterInput,
+  ): Promise<GetTaskResponse> {
+    let skipNumber = 0;
+    let takeRecord = 10;
+    let timeResult;
+    const { time, status, search, pagination, date, sort } = taskFiltter;
 
-  async getAll(userId: number): Promise<GetTaskResponse> {
-    const tasks = await this.taskRepo.find({
-      where: {
-        user: {
-          id: userId,
-        },
-      },
-      relations: {
-        user: true,
-      },
+    if (time) {
+      const timeArr = time.split(':');
+      const hour = Number(timeArr[0]);
+      const minute = Number(timeArr[1]);
+      timeResult = dayjs(date).hour(hour).minute(minute).format();
+    }
+
+    if (pagination) {
+      const { page, limit } = pagination;
+      skipNumber = (page - 1) * limit;
+      takeRecord = limit;
+    }
+
+    const conditions: FindOptionsWhere<Task> | FindOptionsWhere<Task>[] = {
+      ...(status ? { status } : {}),
+      ...(search ? { name: Like(`%${search}%`) } : {}),
+      ...(date
+        ? { start_date: Raw((alias) => `${alias.toString()} = '${date}'`) }
+        : {}),
+      ...(time
+        ? {
+            start_time: LessThanOrEqual(timeResult),
+            end_time: MoreThanOrEqual(timeResult),
+          }
+        : {}),
+      ...(userId ? { user: { id: userId } } : {}),
+    };
+
+    const orders: FindOptionsOrder<Task> = sort?.field
+      ? {
+          [`${sort.field}`]: `${sort.direction}`,
+        }
+      : {};
+
+    const [tasks, total] = await this.taskRepo.findAndCount({
+      where: conditions,
+      skip: skipNumber,
+      take: takeRecord,
+      order: orders,
     });
+
+    const lastPage = Math.ceil(total / pagination.limit);
+    const nextPage =
+      pagination.page + 1 > lastPage ? null : pagination.page + 1;
+    const prevPage = pagination.page - 1 < 1 ? null : pagination.page - 1;
 
     console.log(tasks);
 
@@ -43,70 +93,11 @@ export class TaskService {
       message: 'Find tasks success',
       errors: [],
       tasks: tasks,
-    };
-  }
-
-  async fillterTask(
-    userId: number,
-    taskFiltter: TaskFillterInput,
-  ): Promise<GetTaskResponse> {
-    const { time, status, search, pagination, date, sort } = taskFiltter;
-    let tasks = (await this.getAll(userId)).tasks;
-    if (time) {
-      const timeRq = this.convertStringToMinute(time);
-      tasks = tasks.filter(
-        (item) =>
-          this.convertStringToMinute(item.start_time) <= timeRq &&
-          timeRq <= this.convertStringToMinute(item.end_time),
-      );
-    }
-
-    if (search) {
-      tasks = tasks.filter((item) => item.task_name.includes(search));
-    }
-
-    if (status) {
-      tasks = tasks.filter((item) => item.status == status);
-    }
-
-    if (pagination) {
-      const { page = 1, limit = 10 } = pagination;
-      const startIndex = (page - 1) * limit;
-      const lastIndex = startIndex + limit;
-      tasks = tasks.slice(startIndex, lastIndex);
-    }
-
-    if (date) {
-      tasks = tasks.filter((item) => item.start_date.toString() == date);
-    }
-
-    if (sort) {
-      const { field, direction } = sort;
-      tasks = tasks.sort((a, b) => {
-        let aValue = a[field] as string;
-        let bValue = b[field] as string;
-        if (field == 'start_time' || field == 'end_time') {
-          aValue = this.convertStringToMinute(a[field]).toString();
-          bValue = this.convertStringToMinute(b[field]).toString();
-        }
-
-        if (aValue < bValue) return direction === SORT_DIRECTION.ASC ? -1 : 1;
-        if (aValue > bValue) return direction === SORT_DIRECTION.ASC ? 1 : -1;
-        return 0;
-      });
-    }
-
-    tasks.map((item) => {
-      item.user = null;
-      return item;
-    });
-
-    return {
-      code: HttpStatus.OK,
-      success: true,
-      message: 'Find tasks success',
-      errors: [],
-      tasks: tasks,
+      total: total,
+      currentPage: pagination.page,
+      lastPage: lastPage,
+      prevPage: prevPage,
+      nextPage: nextPage,
     };
   }
 
@@ -117,10 +108,7 @@ export class TaskService {
     try {
       let flag = true;
       // check start_time, end_time
-      const minuteStartTimeRq = this.convertStringToMinute(req.start_time);
-      const minuteEndTimeRq = this.convertStringToMinute(req.end_time);
-
-      if (minuteStartTimeRq > minuteEndTimeRq) {
+      if (req.start_time > req.end_time) {
         return {
           code: HttpStatus.BAD_REQUEST,
           success: false,
@@ -161,6 +149,7 @@ export class TaskService {
 
       if (existTasks) {
         flag = this.checkValidateTime(existTasks, req.start_time, req.end_time);
+        console.log(flag);
       }
 
       if (!flag) {
@@ -171,7 +160,7 @@ export class TaskService {
           errors: [
             {
               field: 'start_time, end_time',
-              message: `User has an task from ${req.start_time} to ${req.end_time}`,
+              message: `User has an task from ${req.start_time.toLocaleString('vn-VN', { timeStyle: 'medium', hour12: false })} to ${req.end_time.toLocaleString('vn-VN', { timeStyle: 'medium', hour12: false })}`,
             },
           ],
           task: null,
@@ -182,12 +171,11 @@ export class TaskService {
       task.user = existUser;
 
       if (type == TYPE_REQUEST.create) {
-        task = this.configData.createdData(this.userLogin, task);
+        task = this.configData.createdData(task);
       } else {
         const existTask = await this.taskRepo.findOneBy({ id: req.id });
         task.created_at = existTask.created_at;
-        task.created_by = existTask.created_by;
-        task = this.configData.updatedData(this.userLogin, task);
+        task = this.configData.updatedData(task);
       }
 
       await this.taskRepo.save(task);
@@ -199,7 +187,7 @@ export class TaskService {
         errors: [],
         task: {
           id: task.id,
-          task_name: task.task_name,
+          name: task.name,
         },
       };
     } catch (error) {
@@ -263,7 +251,7 @@ export class TaskService {
         errors: [],
         task: {
           id: id,
-          task_name: existTask.task_name,
+          name: existTask.name,
         },
       };
     } catch (error) {
@@ -271,25 +259,18 @@ export class TaskService {
     }
   }
 
-  private convertStringToMinute(time: string) {
-    const [hour, minute] = time.split(':').map(Number);
-    return hour * 60 + minute;
-  }
-
-  private checkValidateTime(listTask: Task[], startTime, endTime): boolean {
+  private checkValidateTime(
+    listTask: Task[],
+    startTime: Date,
+    endTime: Date,
+  ): boolean {
     let flag = true;
-    const minuteStartTimeRq = this.convertStringToMinute(startTime);
-    const minuteEndTimeRq = this.convertStringToMinute(endTime);
     listTask.forEach((item) => {
-      const minuteStartTime = this.convertStringToMinute(item.start_time);
-      const minuteEndTime = this.convertStringToMinute(item.end_time);
       if (
-        (minuteStartTimeRq < minuteEndTime &&
-          minuteEndTimeRq > minuteEndTime) ||
-        (minuteStartTimeRq < minuteStartTime &&
-          minuteEndTimeRq > minuteStartTime) ||
-        (minuteStartTimeRq == minuteStartTime &&
-          minuteEndTimeRq == minuteEndTime)
+        (startTime <= item.end_time && endTime >= item.end_time) ||
+        (startTime <= item.start_time && endTime >= item.start_time) ||
+        (startTime.getTime() === item.start_time.getTime() &&
+          endTime.getTime() === item.end_time.getTime())
       ) {
         flag = false;
         return;

@@ -10,7 +10,7 @@ export class UserFactory {
     const hashPass = await this.hashPassword(user.password);
     return {
       id: null,
-      user_name: user.user_name,
+      name: user.name,
       email: user.email,
       password: hashPass,
       avatar:
@@ -21,9 +21,7 @@ export class UserFactory {
       tasks: [],
       isDelete: null,
       created_at: null,
-      created_by: null,
       updated_at: null,
-      updated_by: null,
     };
   }
 

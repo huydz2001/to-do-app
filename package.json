@@ -43,6 +43,7 @@
     "class-validator": "^0.14.1",
     "cloudinary": "^2.2.0",
     "cookie-parser": "^1.4.6",
+    "dayjs": "^1.11.11",
     "graphql": "^16.9.0",
     "mongodb": "^5.9.2",
     "multer": "^1.4.5-lts.1",

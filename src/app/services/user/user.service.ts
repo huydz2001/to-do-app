@@ -100,7 +100,7 @@ export class UserService {
     const newHashPass = await brcypt.hashSync(req.newPass, 10);
     existUser.password = newHashPass;
 
-    existUser = this.configData.updatedData(existUser.id, existUser);
+    existUser = this.configData.updatedData(existUser);
 
     await this.userRepo.save(existUser);
 
@@ -135,7 +135,7 @@ export class UserService {
     }
 
     const userFindUsername = await this.userRepo.findOneBy({
-      user_name: req.user_name,
+      name: req.name,
     });
     if (userFindUsername) {
       return {
@@ -144,7 +144,7 @@ export class UserService {
         message: 'Update profile failed',
         errors: [
           {
-            field: 'user_name',
+            field: 'name',
             message: 'Username is already used by an other user',
           },
         ],
@@ -152,10 +152,10 @@ export class UserService {
       };
     }
 
-    existUser = this.configData.updatedData(id, existUser);
+    existUser = this.configData.updatedData(existUser);
     existUser.avatar = req.avatar;
     existUser.dob = req.dob;
-    existUser.user_name = req.user_name;
+    existUser.name = req.name;
 
     await this.userRepo.save(existUser);
 

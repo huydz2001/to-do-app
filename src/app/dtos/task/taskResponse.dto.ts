@@ -7,7 +7,7 @@ export class TaskResponse {
   id: number;
 
   @Field()
-  task_name: string;
+  name: string;
 }
 
 @ObjectType()

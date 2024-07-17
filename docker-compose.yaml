@@ -13,7 +13,7 @@ services:
       - "5432:5432"
     networks:
       - postgres
-    restart: unless-stopped
+    restart: always
   todo:
     image: nestjs
     container_name: todo
@@ -40,6 +40,8 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    volumes:
+      - ./pgadmin:/root/.pgadmin
     depends_on:
       - postgres
     ports:

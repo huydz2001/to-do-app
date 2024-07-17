@@ -12,9 +12,7 @@ export class GroupFactory {
       avatar: group.avatar,
       isDelete: false,
       created_at: null,
-      created_by: null,
       updated_at: null,
-      updated_by: null,
     };
   }
 }
