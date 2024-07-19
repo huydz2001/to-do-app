@@ -33,13 +33,13 @@ export class Task extends BaseModel {
   start_date: string;
 
   @Column({
-    type: 'timestamp without time zone',
+    type: 'timestamptz',
   })
   @Field((type) => Date, { nullable: false })
   start_time: Date;
 
   @Column({
-    type: 'timestamp without time zone',
+    type: 'timestamptz',
   })
   @Field({ nullable: false })
   end_time: Date;

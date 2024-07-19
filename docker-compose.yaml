@@ -57,7 +57,7 @@ networks:
 
 
 #Create container, pull image ,...
-# docker-compose up -d
+# docker-compose up -d --build
 #Start db
 # npm run docker:db:start 
 #Stop db

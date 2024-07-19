@@ -64,12 +64,20 @@ export class TaskService {
         : {}),
       ...(time
         ? {
-            start_time: LessThanOrEqual(timeResult),
-            end_time: MoreThanOrEqual(timeResult),
+            start_time: Raw(
+              (alias) =>
+                `${new Date(alias).getTime()} <= ${new Date(time).getTime()}`,
+            ),
+            end_time: Raw(
+              (alias) =>
+                `${new Date(alias).getTime()} >= ${new Date(time).getTime()}`,
+            ),
           }
         : {}),
       ...(userId ? { user: { id: userId } } : {}),
     };
+
+    console.log(conditions);
 
     const orders: FindOptionsOrder<Task> = sort?.field
       ? {
