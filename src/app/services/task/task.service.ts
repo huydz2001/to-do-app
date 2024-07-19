@@ -46,7 +46,6 @@ export class TaskService {
       const hour = Number(timeArr[0]);
       const minute = Number(timeArr[1]);
       timeResult = dayjs(date).hour(hour).minute(minute).format();
-      console.log(time);
     }
 
     if (pagination) {
@@ -62,22 +61,26 @@ export class TaskService {
       ...(date
         ? { start_date: Raw((alias) => `${alias.toString()} = '${date}'`) }
         : {}),
+      // ...(time
+      //   ? {
+      //       start_time: Raw(
+      //         (alias) =>
+      //           `${new Date(alias).getTime()} <= ${new Date(time).getTime()}`,
+      //       ),
+      //       end_time: Raw(
+      //         (alias) =>
+      //           `${new Date(alias).getTime()} >= ${new Date(time).getTime()}`,
+      //       ),
+      //     }
+      //   : {}),
       ...(time
         ? {
-            start_time: Raw(
-              (alias) =>
-                `${new Date(alias).getTime()} <= ${new Date(time).getTime()}`,
-            ),
-            end_time: Raw(
-              (alias) =>
-                `${new Date(alias).getTime()} >= ${new Date(time).getTime()}`,
-            ),
+            start_time: LessThanOrEqual(timeResult),
+            end_time: MoreThanOrEqual(timeResult),
           }
         : {}),
       ...(userId ? { user: { id: userId } } : {}),
     };
-
-    console.log(conditions);
 
     const orders: FindOptionsOrder<Task> = sort?.field
       ? {

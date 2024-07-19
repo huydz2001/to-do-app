@@ -32,7 +32,6 @@ export class RoleGroupAuth implements CanActivate {
     });
 
     return isSuccess.then((result) => {
-      console.log(result);
       return result;
     });
   }
