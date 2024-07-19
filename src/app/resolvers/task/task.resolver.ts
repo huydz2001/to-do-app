@@ -28,7 +28,7 @@ export class TaskResolver {
   async getAll(
     @Args('fillter', { type: () => TaskFillterInput, nullable: true })
     fillterTaskDto: TaskFillterInput,
-    @Args('userId', { type: () => Int }) userId: number,
+    @Args('userId', { type: () => Int, nullable: true }) userId: number,
   ): Promise<GetTaskResponse> {
     if (fillterTaskDto != null) {
       return await this.taskService.fillterTask(userId, fillterTaskDto);

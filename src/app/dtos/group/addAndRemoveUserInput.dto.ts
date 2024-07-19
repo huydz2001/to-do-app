@@ -5,6 +5,6 @@ export class AddAndRemoveUserInput {
   @Field((type) => Int)
   groupId: number;
 
-  @Field((type) => Int)
-  userId: number;
+  @Field((type) => String)
+  userName: string;
 }

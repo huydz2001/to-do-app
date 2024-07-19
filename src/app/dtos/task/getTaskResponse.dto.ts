@@ -7,6 +7,15 @@ export class GetTaskResponse extends BaseResponse {
   @Field((type) => [Task], { nullable: true })
   tasks: Task[];
 
+  @Field((type) => Int, { nullable: true })
+  completed: number;
+
+  @Field((type) => Int, { nullable: true })
+  doing: number;
+
+  @Field((type) => Int, { nullable: true })
+  todo: number;
+
   @Field((type) => Int)
   total: number;
 

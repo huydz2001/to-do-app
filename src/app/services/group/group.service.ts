@@ -1,5 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import e from 'express';
 import { STATUS, TYPE_REQUEST } from 'src/app/common';
 import {
   AddAndRemoveUserInput,
@@ -180,6 +181,37 @@ export class GroupService {
     });
   }
 
+  async getByUser(userId: number): Promise<Group> {
+    const existGroup = await this.groupRepo.findOne({
+      where: {
+        isDelete: false,
+        members: {
+          id: userId,
+        },
+      },
+      relations: {
+        members: true,
+      },
+    });
+
+    const members = await this.groupRepo
+      .findOne({
+        where: {
+          id: existGroup.id,
+        },
+        relations: {
+          members: true,
+        },
+      })
+      .then((result) => {
+        return result.members;
+      });
+
+    existGroup.members = members;
+
+    return existGroup;
+  }
+
   async findByIds(ids: number[]) {
     return await this.groupRepo.findBy({
       id: In(ids),
@@ -204,7 +236,7 @@ export class GroupService {
   }
 
   async addUser(req: AddAndRemoveUserInput): Promise<AddAndRemoveUserResponse> {
-    const { groupId, userId } = req;
+    const { groupId, userName } = req;
     try {
       let existGroup = await this.groupRepo.findOne({
         where: { id: groupId },
@@ -231,7 +263,7 @@ export class GroupService {
       }
 
       // check exist user and joined group
-      let existUser = await this.userRepo.findOneBy({ id: userId });
+      let existUser = await this.userRepo.findOneBy({ name: userName });
       if (!existUser) {
         return {
           code: HttpStatus.BAD_REQUEST,
@@ -239,8 +271,8 @@ export class GroupService {
           message: 'User not found',
           errors: [
             {
-              field: 'userId',
-              message: 'userId not exist',
+              field: 'user name',
+              message: 'user name not exist',
             },
           ],
           groupId: null,
@@ -278,7 +310,7 @@ export class GroupService {
         errors: [],
         groupId: groupId,
         user: {
-          id: userId,
+          id: existUser.id,
           user_name: existUser.name,
         },
       };
@@ -290,7 +322,7 @@ export class GroupService {
   async removeUser(
     req: AddAndRemoveUserInput,
   ): Promise<AddAndRemoveUserResponse> {
-    const { groupId, userId } = req;
+    const { groupId, userName } = req;
 
     try {
       let existGroup = await this.groupRepo.findOne({
@@ -318,7 +350,7 @@ export class GroupService {
       }
 
       // check exist user
-      let existUser = await this.userRepo.findOneBy({ id: userId });
+      let existUser = await this.userRepo.findOneBy({ name: userName });
       if (!existUser) {
         return {
           code: HttpStatus.BAD_REQUEST,
@@ -326,8 +358,8 @@ export class GroupService {
           message: 'User not found',
           errors: [
             {
-              field: 'userId',
-              message: 'userId not exist',
+              field: 'user name',
+              message: 'user name not exist',
             },
           ],
           groupId: null,
@@ -336,7 +368,7 @@ export class GroupService {
       }
 
       // check exist member in group
-      if (!existGroup.members.filter((x) => x.id == userId)) {
+      if (!existGroup.members.filter((x) => x.name == userName)) {
         return {
           code: HttpStatus.BAD_REQUEST,
           success: false,
@@ -353,7 +385,7 @@ export class GroupService {
       }
 
       existGroup.members = existGroup.members.filter(
-        (member) => member.id !== userId,
+        (member) => member.name !== userName,
       );
       existGroup = this.configData.updatedData(existGroup);
 
@@ -373,7 +405,7 @@ export class GroupService {
         errors: [],
         groupId: groupId,
         user: {
-          id: userId,
+          id: existUser.id,
           user_name: existUser.name,
         },
       };

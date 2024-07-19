@@ -9,21 +9,18 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { AuthService } from 'src/app/services';
 import { ADMIN_ID } from '../constants';
-import { RequestService } from 'src/app/shared';
 
 @Injectable()
 export class AuthencationMiddleware implements NestMiddleware {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
-    private requsetService: RequestService,
     private readonly authService: AuthService,
   ) {}
 
   async use(req: any, res: any, next: (error?: any) => void) {
-    const isAuth =
-      req.body.operationName == 'Login' || req.body.operationName == 'Register';
-
+    const listCheck = ['Login', 'Register', 'RefreshToken'];
+    const isAuth = listCheck.includes(req.body.operationName);
     if (!isAuth) {
       const token = this.extractTokenFromHeader(req);
       if (!token) {
@@ -44,7 +41,6 @@ export class AuthencationMiddleware implements NestMiddleware {
         }
 
         req['user'] = payload.id;
-        this.requsetService.setUserId(payload.id);
       } catch (error) {
         if (error.name === 'JsonWebTokenError') {
           throw new UnauthorizedException('Invalid Token');
@@ -54,7 +50,6 @@ export class AuthencationMiddleware implements NestMiddleware {
       }
     } else {
       req['user'] = ADMIN_ID;
-      this.requsetService.setUserId(ADMIN_ID);
     }
     next();
   }

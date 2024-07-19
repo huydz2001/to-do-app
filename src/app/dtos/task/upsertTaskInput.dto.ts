@@ -33,5 +33,8 @@ export class UpsertTaskInput {
   status?: number;
 
   @Field((type) => Int)
+  createBy: number;
+
+  @Field((type) => Int)
   userId: number;
 }
