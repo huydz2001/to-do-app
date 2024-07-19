@@ -32,6 +32,13 @@ export class GroupResolver {
     return await this.groupService.getAll();
   }
 
+  @Query((returns) => Group, { nullable: true, name: 'getGroupByUser' })
+  async getGroupByUser(
+    @Args('userId', { type: () => Int }) userId: number,
+  ): Promise<Group> {
+    return await this.groupService.getByUser(userId);
+  }
+
   @ResolveField('members', (returns) => [User])
   async posts(@Parent() group: Group) {
     return group.members;

@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
-import { TYPE_REQUEST } from 'src/app/common';
+import { STATUS_TASK, TYPE_REQUEST } from 'src/app/common';
 import {
   ActionTaskResponse,
   TaskFillterInput,
@@ -17,6 +17,7 @@ import {
   LessThanOrEqual,
   Like,
   MoreThanOrEqual,
+  Not,
   Raw,
   Repository,
 } from 'typeorm';
@@ -37,13 +38,15 @@ export class TaskService {
     let skipNumber = 0;
     let takeRecord = 10;
     let timeResult;
-    const { time, status, search, pagination, date, sort } = taskFiltter;
+    const { time, status, search, pagination, date, sort, createBy } =
+      taskFiltter;
 
     if (time) {
       const timeArr = time.split(':');
       const hour = Number(timeArr[0]);
       const minute = Number(timeArr[1]);
       timeResult = dayjs(date).hour(hour).minute(minute).format();
+      console.log(time);
     }
 
     if (pagination) {
@@ -53,7 +56,8 @@ export class TaskService {
     }
 
     const conditions: FindOptionsWhere<Task> | FindOptionsWhere<Task>[] = {
-      ...(status ? { status } : {}),
+      ...(status != null ? { status: status } : {}),
+      ...(createBy ? { created_by: createBy } : {}),
       ...(search ? { name: Like(`%${search}%`) } : {}),
       ...(date
         ? { start_date: Raw((alias) => `${alias.toString()} = '${date}'`) }
@@ -75,6 +79,9 @@ export class TaskService {
 
     const [tasks, total] = await this.taskRepo.findAndCount({
       where: conditions,
+      relations: {
+        user: true,
+      },
       skip: skipNumber,
       take: takeRecord,
       order: orders,
@@ -85,7 +92,44 @@ export class TaskService {
       pagination.page + 1 > lastPage ? null : pagination.page + 1;
     const prevPage = pagination.page - 1 < 1 ? null : pagination.page - 1;
 
-    console.log(tasks);
+    const [taskTodo, todo] = await this.taskRepo.findAndCount({
+      where: {
+        isDelete: false,
+        user: {
+          id: userId,
+        },
+        status: STATUS_TASK.NOT_STARTED,
+      },
+      relations: {
+        user: true,
+      },
+    });
+
+    const [taskDoing, doing] = await this.taskRepo.findAndCount({
+      where: {
+        isDelete: false,
+        user: {
+          id: userId,
+        },
+        status: STATUS_TASK.DOING,
+      },
+      relations: {
+        user: true,
+      },
+    });
+
+    const [taskComplete, complete] = await this.taskRepo.findAndCount({
+      where: {
+        isDelete: false,
+        user: {
+          id: userId,
+        },
+        status: STATUS_TASK.DONE,
+      },
+      relations: {
+        user: true,
+      },
+    });
 
     return {
       code: HttpStatus.OK,
@@ -93,6 +137,9 @@ export class TaskService {
       message: 'Find tasks success',
       errors: [],
       tasks: tasks,
+      doing: doing,
+      todo: todo,
+      completed: complete,
       total: total,
       currentPage: pagination.page,
       lastPage: lastPage,
@@ -145,11 +192,11 @@ export class TaskService {
       const existTasks = await this.getTasksByUserAndDate(
         req.userId,
         req.start_date,
+        req.id,
       );
 
       if (existTasks) {
         flag = this.checkValidateTime(existTasks, req.start_time, req.end_time);
-        console.log(flag);
       }
 
       if (!flag) {
@@ -175,6 +222,7 @@ export class TaskService {
       } else {
         const existTask = await this.taskRepo.findOneBy({ id: req.id });
         task.created_at = existTask.created_at;
+        task.user = existUser;
         task = this.configData.updatedData(task);
       }
 
@@ -195,9 +243,14 @@ export class TaskService {
     }
   }
 
-  async getTasksByUserAndDate(userId: number, date: string): Promise<Task[]> {
+  async getTasksByUserAndDate(
+    userId: number,
+    date: string,
+    taskId: number,
+  ): Promise<Task[]> {
     return await this.taskRepo.find({
       where: {
+        id: taskId ? Not(taskId) : undefined,
         user: {
           id: userId,
         },

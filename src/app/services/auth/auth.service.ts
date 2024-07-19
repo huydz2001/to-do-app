@@ -26,7 +26,6 @@ export class AuthService {
     private readonly configData: ConfigData,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly requestService: RequestService,
   ) {}
 
   async crateUser(req: CreateDataInput): Promise<CreateUserResponse> {
@@ -99,14 +98,16 @@ export class AuthService {
           id: true,
           email: true,
           password: true,
+          name: true,
+          status: true,
         },
       });
 
       if (!user) {
         return {
-          code: HttpStatus.OK,
+          code: HttpStatus.NOT_FOUND,
           success: true,
-          message: 'User not found',
+          message: 'Email or Password incorrect',
           errors: [
             {
               field: 'emailOrUsername',
@@ -125,7 +126,7 @@ export class AuthService {
 
       if (isMatchPass == false) {
         return {
-          code: HttpStatus.OK,
+          code: HttpStatus.BAD_REQUEST,
           success: true,
           message: 'Wrong password',
           errors: [
@@ -139,7 +140,12 @@ export class AuthService {
         };
       }
 
-      const payload = { id: user.id, email: user.email };
+      const payload = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        status: user.status,
+      };
       const { accessToken, refreshToken } = await this.generateToken(payload);
 
       await this.storeRefreshToken(refreshToken, user.id);
@@ -202,6 +208,8 @@ export class AuthService {
       const { accessToken, refreshToken } = await this.generateToken({
         id: payload.id,
         email: payload.email,
+        name: payload.name,
+        status: payload.status,
       });
 
       await this.storeRefreshToken(refreshToken, payload.id);

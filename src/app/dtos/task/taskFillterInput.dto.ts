@@ -8,10 +8,11 @@ export class TaskFillterInput {
   @Field({ nullable: true })
   time: string;
 
-  @IsDateString()
+  @Field(() => Int, { nullable: true })
+  createBy: number;
+
   @Field({
     nullable: true,
-    defaultValue: dayjs().format('YYYY-MM-DD'),
   })
   date: string;
 

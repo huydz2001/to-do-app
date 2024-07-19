@@ -13,6 +13,7 @@ type Task {
   end_time: Timestamp!
   status: Float!
   desc: String
+  created_by: Int!
   user: User
 }
 
@@ -166,6 +167,9 @@ type GetTaskResponse {
   message: String!
   errors: [GraphQLError!]
   tasks: [Task!]
+  completed: Int
+  doing: Int
+  todo: Int
   total: Int!
   currentPage: Int!
   nextPage: Int
@@ -174,14 +178,16 @@ type GetTaskResponse {
 }
 
 type Query {
-  getAllTasks(fillter: TaskFillterInput, userId: Int!): GetTaskResponse
+  getAllTasks(fillter: TaskFillterInput, userId: Int): GetTaskResponse
   getAllGroups: [Group!]
+  getGroupByUser(userId: Int!): Group
   getAllUsers: [User!]
 }
 
 input TaskFillterInput {
   time: String
-  date: String = "2024-07-17"
+  createBy: Int
+  date: String
   status: Int
   search: String
   pagination: PaginationInput!
@@ -223,6 +229,7 @@ input UpsertTaskInput {
   end_time: Timestamp!
   desc: String
   status: Int
+  createBy: Int!
   userId: Int!
 }
 
@@ -236,7 +243,7 @@ input UpsertGroupRequest {
 
 input AddAndRemoveUserInput {
   groupId: Int!
-  userId: Int!
+  userName: String!
 }
 
 input ChangePassInput {

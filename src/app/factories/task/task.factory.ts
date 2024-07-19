@@ -14,6 +14,7 @@ export class TaskFactory {
       end_time: task.end_time,
       status: task.status ? task.status : STATUS_TASK.NOT_STARTED,
       desc: task.desc ? task.desc : null,
+      created_by: task.createBy,
       user: null,
       isDelete: false,
       created_at: null,

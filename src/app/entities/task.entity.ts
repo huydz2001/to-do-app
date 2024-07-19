@@ -52,6 +52,10 @@ export class Task extends BaseModel {
   @Field({ nullable: true })
   desc?: string;
 
+  @Column({ nullable: false })
+  @Field((type) => Int)
+  created_by: number;
+
   constructor(item: Partial<Task>) {
     super();
     Object.assign(this, item);
